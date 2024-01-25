@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=40.6.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sosstat"
+description = "Information extractor from sos reports"
+dynamic = ["version"]
+dependencies = [
+  "mysqlclient",
+]
+requires-python = ">= 3.6"
+readme = "README.md"
+authors = [
+  {name = "Veda Barrenkala", email = "vbarrenk@redhat.com"},
+  {name = "Robin Jarry", email = "rjarry@redhat.com"},
+]
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+lines_after_imports = 2
+force_sort_within_sections = true
+known_first_party = ["sosstat"]
+default_section = "THIRDPARTY"
+no_lines_before = "LOCALFOLDER"
+
+[flake8]
+# E722 do not use bare except'
+ignore = ["E722"]
+# E713 test for membership should be 'not in'
+select = ["E713"]
+
+[tool.pylint.main]
+persistent = false
+suggestion-mode = false
+
+[tool.pylint."messages control"]
+enable = ["all"]
+disable = [
+	"broad-except",
+	"cyclic-import",
+	"duplicate-code",
+	"file-ignored",
+	"fixme",
+	"import-outside-toplevel",
+	"invalid-overridden-method",
+	"line-too-long",
+	"locally-disabled",
+	"missing-docstring",
+	"suppressed-message",
+	"unnecessary-pass",
+	"unused-argument",
+	"use-implicit-booleaness-not-comparison-to-string",
+	"use-implicit-booleaness-not-comparison-to-zero",
+	"wrong-import-order",
+]
+
+[tool.pylint.reports]
+msg-template = "{path}:{line} {msg} [{symbol}]"
+output-format = "text"
+score = false
+
+[tool.pylint.refactoring]
+max-nested-blocks = 5
+never-returning-functions = ["sys.exit", "argparse.parse_error"]
+
+[tool.pylint.variables]
+init-import = true
+
+[tools.pylint.basic]
+module-naming-style="snake_case"
+const-naming-style="UPPER_CASE"
+class-naming-style="PascalCase"
+class-attribute-naming-style="any"
+class-const-naming-style="UPPER_CASE"
+attr-naming-style="snake_case"
+function-naming-style="snake_case"
+method-naming-style="snake_case"
+argument-naming-style="any"
+variable-naming-style="any"
+inlinevar-naming-style="any"
+
+[tool.pylint.format]
+expected-line-ending-format="LF"
+
+[tool.pylint.design]
+max-args=7
+max-attributes=10
+max-bool-expr=5
+max-branches=20
+max-locals=16
+max-parents=10
+max-public-methods=20
+max-returns=7
+max-statements=50
+min-public-methods=0

@@ -1,0 +1,20 @@
+# -*- mode: ini; -*-
+# ex: ft=dosini
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[{**.py,bin/sosstat}]
+indent_style = space
+indent_size = 4
+max_line_length = 88
+
+[Makefile]
+indent_style = tab
+
+[**.scdoc]
+indent_style = tab

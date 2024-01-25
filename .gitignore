@@ -1,0 +1,8 @@
+/.venv
+*.py[co]
+/data
+/*.egg-info
+/dist
+/build
+/dlrepo/static/dlrepo.css
+/docs/dlrepo*.[0-9]
