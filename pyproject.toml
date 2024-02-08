@@ -28,12 +28,6 @@ known_first_party = ["sosstat"]
 default_section = "THIRDPARTY"
 no_lines_before = "LOCALFOLDER"
 
-[flake8]
-# E722 do not use bare except'
-ignore = ["E722"]
-# E713 test for membership should be 'not in'
-select = ["E713"]
-
 [tool.pylint.main]
 persistent = false
 suggestion-mode = false

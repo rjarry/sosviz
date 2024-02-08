@@ -2,5 +2,4 @@ mysqlclient
 black
 isort
 pylint
-flake8
 setuptools

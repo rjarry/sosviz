@@ -29,8 +29,6 @@ lint: $(VENV)/.stamp
 	@echo "[isort]"
 	@$(in_venv) $(PYTHON) -m isort -j$(J) --diff --check-only $(PY_FILES) || \
 		{ echo "Use 'make format' to fix the problems."; exit 1; }
-	@echo "[flake8]"
-	@$(in_venv) $(PYTHON) -m flake8 -j$(J) $(PY_FILES)
 	@echo "[pylint]"
 	@$(in_venv) $(PYTHON) -m pylint $(PY_FILES)
 
