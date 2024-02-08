@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024 Robin Jarry
 
-from sosstat.__main__ import main
 
-
-main()
+def parse_report(path: str) -> dict:
+    raise NotImplementedError()
