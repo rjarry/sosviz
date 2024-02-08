@@ -1,0 +1,22 @@
+---
+image: alpine/latest
+packages:
+  - ethtool
+  - graphviz
+  - iproute2
+  - py3-build
+  - twine
+sources:
+  - "https://git.sr.ht/~rjarry/sosstat"
+tasks:
+  - lint: |
+      make -C linux-tools lint
+  - tests: |
+      make -C linux-tools tests
+  - release: |
+      cd linux-tools
+      tag=$(git describe --exact-match) || exit 0
+      curl -L https://meta.sr.ht/~rjarry.pgp | gpg --import
+      git tag -v "$tag"
+      python3 -m build
+      twine upload dist/*
