@@ -6,6 +6,7 @@ Collect information from an sosreport and export it in other formats.
 """
 
 import argparse
+import pathlib
 import sys
 
 from . import collect, output
@@ -16,8 +17,9 @@ def main():
     parser.add_argument(
         "path",
         metavar="PATH",
+        type=pathlib.Path,
         help="""
-        Path to an sosreport. Can be either a folder or a compressed archive.
+        Path to an uncompressed sosreport folder.
         """,
     )
     parser.add_argument(
@@ -39,12 +41,14 @@ def main():
     )
     args = parser.parse_args()
     try:
+        if not args.path.is_dir():
+            raise ValueError(f"'{args.path}': No such directory")
         report = collect.parse_report(args.path)
         output.render(report, args.format)
     except Exception as e:
-        if args.debug:
+        if args.debug or isinstance(e, NotImplementedError):
             raise
-        print(f"error: {e!r}", file=sys.stderr)
+        print(f"error: {e}", file=sys.stderr)
         sys.exit(1)
 
 

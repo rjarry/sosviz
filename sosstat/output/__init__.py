@@ -1,13 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024 Robin Jarry
 
-from . import dot, text
+from . import dot, json, text
 
 
-FORMATS = {
-    "dot": dot,
-    "text": text,
-}
+FORMATS = {"dot": dot, "text": text, "json": json}
 DEFAULT_FORMAT = "text"
 
 
