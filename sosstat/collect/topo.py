@@ -24,11 +24,15 @@ def parse_report(path: pathlib.Path, data: dict):
                 size = int(match.group(1)) * 1024
                 numa.setdefault("hugepages", {})[size] = int(huge.read_text())
 
-        cpu_pairs = set()
+        siblings = {}
+        cpus = set()
         for cpu in path.glob("sys/devices/system/cpu/cpu*/topology"):
             package_id = int((cpu / "physical_package_id").read_text())
             if package_id != numa_id:
                 continue
-            threads = (cpu / "thread_siblings_list").read_text().split(",")
-            cpu_pairs.add(frozenset(int(t) for t in threads))
-        numa["cpus"] = sorted(tuple(sorted(p)) for p in cpu_pairs)
+            threads = set(int(t) for t in (cpu / "thread_siblings_list").read_text().split(","))
+            cpus.update(threads)
+            for t in threads:
+                siblings[t] = threads - {t}
+        numa["cpus"] = cpus
+        numa["thread_siblings"] = siblings
