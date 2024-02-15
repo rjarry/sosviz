@@ -45,6 +45,8 @@ def main():
             raise ValueError(f"'{args.path}': No such directory")
         report = collect.parse_report(args.path)
         output.render(report, args.format)
+    except BrokenPipeError:
+        pass
     except Exception as e:
         if args.debug or isinstance(e, NotImplementedError):
             raise
