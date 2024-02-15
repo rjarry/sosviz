@@ -29,8 +29,12 @@ def parse_report(path: pathlib.Path, data: dict):
             if not match:
                 continue
 
-            nic = nics.setdefault(match.group(1), {})
-            nic["pci_id"] = match.group(1)
+            pci_id = match.group(1)
+            if len(pci_id) != len("0000:00:00.0"):
+                pci_id = "0000:" + pci_id
+
+            nic = nics.setdefault(pci_id, {})
+            nic["pci_id"] = pci_id
             nic["device"] = match.group(2)
             k = re.search(r"^\tKernel driver in use: (.+)$", block, flags=re.MULTILINE)
             if k is not None:

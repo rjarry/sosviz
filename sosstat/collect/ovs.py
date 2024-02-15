@@ -39,8 +39,7 @@ RXQ_RE = re.compile(
 
 
 def parse_report(path: pathlib.Path, data: dict):
-    ovs = {}
-
+    ovs = data["ovs"] = {}
     conf = ovs["config"] = {}
     f = path / "sos_commands/openvswitch/ovs-vsctl_-t_5_list_Open_vSwitch"
     if f.is_file():
@@ -113,8 +112,6 @@ def parse_report(path: pathlib.Path, data: dict):
                         "usage": int(usage),
                     }
                 )
-
-    data["ovs"] = ovs
 
 
 PROP_RE = re.compile(r"^([\w-]+)\s*:\s*(.*)$", re.MULTILINE)
