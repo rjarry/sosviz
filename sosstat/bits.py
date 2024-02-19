@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024 Robin Jarry
 
+import math
 import re
 import typing
 
@@ -65,3 +66,18 @@ def bit_list(bit_ids: typing.Set[int]) -> str:
             groups.append(f"{low}-{high}")
         i += 1
     return ",".join(groups)
+
+
+def human_readable(value: float, order: int = 1000) -> str:
+    units = ("K", "M", "G")
+    i = 0
+    unit = ""
+    while value >= order and i < len(units):
+        unit = units[i]
+        value /= order
+        i += 1
+    if unit == "":
+        return str(value)
+    if value < 100 and value % 1 > 0:
+        return f"{value:.1f}{unit}"
+    return f"{value:.0f}{unit}"

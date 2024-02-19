@@ -4,15 +4,15 @@
 import pathlib
 import re
 
-from ..bits import parse_cpu_set
+from . import D
 
 
 IFACE_RE = re.compile(
     r"""
     ^(?P<name>[^@:]+?)(?:@(?P<link>[^:]+))?:\s+
         <(?P<flags>[\w,-]+)>\s+
-        mtu\s+(?P<mtu>\d+)\s.*
-        (?:master\s+(?P<master>\S+)\s)?.*\n
+        mtu\s+(?P<mtu>\d+)(?:\s+(?:qdisc|mq))*
+        (?:\s+master\s+(?P<master>\S+)\s)?.*\n
     ^\s+link/ether\s+(?P<mac>[a-f\d:]+)\s.*\n
     (?:^\s+
         (?P<kind>\S+)\s+
@@ -34,8 +34,8 @@ ADDR_RE = re.compile(
 )
 
 
-def parse_report(path: pathlib.Path, data: dict):
-    ip = data["interfaces"] = {}
+def parse_report(path: pathlib.Path, data: D):
+    data.interfaces = ip = D()
     f = path / "sos_commands/networking/ip_-d_address"
     if not f.is_file():
         return
@@ -43,7 +43,9 @@ def parse_report(path: pathlib.Path, data: dict):
         match = IFACE_RE.search(block)
         if not match:
             continue
-        d = {k: v for (k, v) in match.groupdict().items() if v is not None}
-        ip[d["name"]] = d
+        d = D({k: v for (k, v) in match.groupdict().items() if v is not None})
+        for dev in path.glob(f"sys/class/net/{d.name}/device"):
+            d.device = dev.resolve().name
+        ip[d.name] = d
         for m in ADDR_RE.finditer(block):
             d.setdefault("ip", []).append(m.group("addr"))

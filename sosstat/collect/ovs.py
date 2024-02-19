@@ -4,6 +4,7 @@
 import pathlib
 import re
 
+from . import D
 from ..bits import parse_cpu_set
 
 
@@ -39,54 +40,57 @@ RXQ_RE = re.compile(
 
 
 def parse_report(path: pathlib.Path, data: dict):
-    ovs = data["ovs"] = {}
-    conf = ovs["config"] = {}
+    data.ovs = ovs = D()
+    ovs.config = conf = D()
     f = path / "sos_commands/openvswitch/ovs-vsctl_-t_5_list_Open_vSwitch"
     if f.is_file():
         ovs_to_dict(f.read_text(), conf)
-    if "other_config" in conf and "pmd-cpu-mask" in conf["other_config"]:
-        mask = conf["other_config"]["pmd-cpu-mask"]
+    if "other_config" in conf and "pmd_cpu_mask" in conf.other_config:
+        mask = conf.other_config.pmd_cpu_mask
         if not mask.startswith("0x"):
             mask = "0x" + mask
-        conf["dpdk_cores"] = parse_cpu_set(mask)
+        conf.dpdk_cores = parse_cpu_set(mask)
 
-    bridges = ovs["bridges"] = {}
-    ports = ovs["ports"] = {}
+    ovs.bridges = bridges = D()
+    ovs.ports = ports = D()
     f = path / "sos_commands/openvswitch/ovs-vsctl_-t_5_show"
     if f.is_file():
         for block in re.split(r"^    Bridge ", f.read_text(), flags=re.MULTILINE):
             br_name, block = block.split("\n", 1)
+            datapath = "???"
+            match = re.search(r"datapath_type: (\S+)", block)
+            if match:
+                datapath = match.group(1)
             for match in PORT_RE.finditer(block):
-                ifaces = {}
+                ifaces = D()
                 for m in IFACE_RE.finditer(match.group("ifaces")):
                     name = m.group("name")
-                    ifaces[name] = {"name": name, "type": m.group("type")}
+                    ifaces[name] = D(name=name, type=m.group("type"))
                     if m.group("options"):
-                        ifaces[m.group("name")]["options"] = cast_value(
-                            m.group("options")
-                        )
+                        ifaces[m.group("name")].options = cast_value(m.group("options"))
                 if not ifaces:
                     continue
                 port_name = match.group("name")
-                port = {"name": port_name, "bridge": br_name}
+                port = D(name=port_name, bridge=br_name)
                 if len(ifaces) > 1:
-                    port["type"] = "bond"
-                    port["members"] = ifaces
+                    port.type = "bond"
+                    port.members = ifaces
                 else:
                     port.update(ifaces[port_name])
                 if match.group("tag"):
-                    port["tag"] = int(match.group("tag"))
+                    port.tag = int(match.group("tag"))
 
                 ports[port_name] = port
-                bridges.setdefault(br_name, {"ports": 0})["ports"] += 1
+                bridges.setdefault(br_name, D(name=br_name, ports=0)).ports += 1
+                bridges[br_name].datapath = datapath
 
     for name, br in bridges.items():
         f = path / f"sos_commands/openvswitch/ovs-ofctl_dump-flows_{name}"
         if not f.is_file():
             continue
-        br["of_rules"] = len(f.read_text().splitlines()) - 1
+        br.of_rules = len(f.read_text().splitlines()) - 1
 
-    pmds = ovs["pmds"] = {}
+    ovs.pmds = pmds = D()
 
     f = path / "sos_commands/openvswitch/ovs-appctl_dpif-netdev.pmd-rxq-show"
     if f.is_file():
@@ -97,20 +101,20 @@ def parse_report(path: pathlib.Path, data: dict):
             numa, core = match.groups()
             core = int(core)
             numa = int(numa)
-            pmds[core] = {"numa": numa, "core": core, "rxqs": []}
+            pmds[core] = D(numa=numa, core=core, rxqs=[])
 
             match = re.search(r"isolated\s*:\s*(true|false)", block)
             if match:
-                pmds[core]["isolated"] = match.group(1) == "true"
+                pmds[core].isolated = match.group(1) == "true"
 
             for match in RXQ_RE.finditer(block):
                 port, rxq, usage = match.groups()
-                pmds[core]["rxqs"].append(
-                    {
-                        "port": port,
-                        "rxq": int(rxq),
-                        "usage": int(usage),
-                    }
+                pmds[core].rxqs.append(
+                    D(
+                        port=port,
+                        rxq=int(rxq),
+                        usage=int(usage),
+                    )
                 )
 
 
@@ -123,7 +127,7 @@ def ovs_to_dict(block: str, d: dict):
         value = cast_value(value)
         if value in ("", [], {}):
             continue
-        d[key] = value
+        d[key.replace("-", "_")] = value
 
 
 def cast_value(value: str):
@@ -135,14 +139,14 @@ def cast_value(value: str):
                 data.append(cast_value(token))
         return data
     if value.startswith("{"):
-        data = {}
+        data = D()
         for token in value.strip("{}").split(", "):
             if token.strip() != "":
                 try:
                     key, val = token.split("=", 1)
                 except ValueError:
                     continue
-                data[key.strip()] = cast_value(val)
+                data[key.strip().replace("-", "_")] = cast_value(val)
         return data
     if value.strip('"') == "true":
         return True

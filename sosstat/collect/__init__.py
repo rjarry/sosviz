@@ -6,8 +6,17 @@ import pathlib
 import pkgutil
 
 
+class D(dict):
+
+    def __getattr__(self, attr):
+        return self[attr]
+
+    def __setattr__(self, attr, value):
+        return self.__setitem__(attr, value)
+
+
 def parse_report(path: pathlib.Path) -> dict:
-    data = {}
+    data = D()
     for collector in discover_collectors():
         collector.parse_report(path, data)
     return data
