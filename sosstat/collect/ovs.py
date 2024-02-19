@@ -51,6 +51,11 @@ def parse_report(path: pathlib.Path, data: dict):
             mask = "0x" + mask
         conf.dpdk_cores = parse_cpu_set(mask)
 
+    ovs_ports(ovs, path)
+    ovs_pmds(ovs, path)
+
+
+def ovs_ports(ovs, path):
     ovs.bridges = bridges = D()
     ovs.ports = ports = D()
     f = path / "sos_commands/openvswitch/ovs-vsctl_-t_5_show"
@@ -90,8 +95,9 @@ def parse_report(path: pathlib.Path, data: dict):
             continue
         br.of_rules = len(f.read_text().splitlines()) - 1
 
-    ovs.pmds = pmds = D()
 
+def ovs_pmds(ovs, path):
+    ovs.pmds = pmds = D()
     f = path / "sos_commands/openvswitch/ovs-appctl_dpif-netdev.pmd-rxq-show"
     if f.is_file():
         for block in re.split(r"^pmd ", f.read_text(), flags=re.MULTILINE):

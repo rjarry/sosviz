@@ -15,45 +15,8 @@ def parse_report(path: pathlib.Path, data: D):
         name = xml.find("./name").text
         vms[name] = vm = D(name=name)
 
-        memory = xml.find("./memory")
-        if memory:
-            vm.memory = int(memory.text) * multiplier(memory.get("unit"))
-
-        cpu = xml.find("./cpu")
-        if cpu:
-            vm.cpu_mode = cpu.get("mode")
-
-        topo = xml.find("./cpu/topology")
-        if topo:
-            vm.topology = t = D()
-            for attr in "sockets", "dies", "cores", "threads":
-                t[attr] = int(topo.get(attr, "1"))
-
-        for numa in xml.findall("./cpu/numa/cell"):
-            numa_id = int(numa.get("id", "0"))
-            vm.setdefault("numa", D())[numa_id] = D(
-                id=numa_id,
-                memory=int(numa.get("memory", "0")) * multiplier(numa.get("unit")),
-                mem_access=numa.get("memAccess"),
-                vcpus=parse_cpu_set(numa.get("cpus", str(numa_id))),
-            )
-
-        for node in xml.findall("./numatune/memnode"):
-            numa_id = int(node.get("cellid", "0"))
-            nodeset = parse_cpu_set(node.get("nodeset"))
-            vm.setdefault("numa", D()).setdefault(numa_id, D()).host_numa = nodeset
-
-        for page in xml.findall("./memoryBacking/hugepages/page"):
-            node_set = parse_cpu_set(page.get("nodeset"))
-            size = int(page.get("size")) * multiplier(page.get("unit"))
-            for numa in vm.get("numa", D()).values():
-                if node_set == numa.get("host_numa"):
-                    numa.hugepage_size = size
-
-        for vcpupin in xml.findall("./cputune/vcpupin"):
-            vcpu = int(vcpupin.get("vcpu"))
-            cpuset = parse_cpu_set(vcpupin.get("cpuset"))
-            vm.setdefault("vcpu-pinning", D())[vcpu] = cpuset
+        vm_cpu(vm, xml)
+        vm_memory(vm, xml)
 
         for iface in xml.findall("./devices/interface"):
             iftype = iface.get("type")
@@ -88,6 +51,50 @@ def parse_report(path: pathlib.Path, data: D):
                     host_dev=f"{domain:04x}:{bus:02x}:{slot:02x}.{function:01x}",
                 )
             )
+
+
+def vm_cpu(vm, xml):
+    cpu = xml.find("./cpu")
+    if cpu:
+        vm.cpu_mode = cpu.get("mode")
+
+    topo = xml.find("./cpu/topology")
+    if topo:
+        vm.topology = t = D()
+        for attr in "sockets", "dies", "cores", "threads":
+            t[attr] = int(topo.get(attr, "1"))
+
+    for numa in xml.findall("./cpu/numa/cell"):
+        numa_id = int(numa.get("id", "0"))
+        vm.setdefault("numa", D())[numa_id] = D(
+            id=numa_id,
+            memory=int(numa.get("memory", "0")) * multiplier(numa.get("unit")),
+            mem_access=numa.get("memAccess"),
+            vcpus=parse_cpu_set(numa.get("cpus", str(numa_id))),
+        )
+
+    for vcpupin in xml.findall("./cputune/vcpupin"):
+        vcpu = int(vcpupin.get("vcpu"))
+        cpuset = parse_cpu_set(vcpupin.get("cpuset"))
+        vm.setdefault("vcpu-pinning", D())[vcpu] = cpuset
+
+
+def vm_memory(vm, xml):
+    memory = xml.find("./memory")
+    if memory:
+        vm.memory = int(memory.text) * multiplier(memory.get("unit"))
+
+    for node in xml.findall("./numatune/memnode"):
+        numa_id = int(node.get("cellid", "0"))
+        nodeset = parse_cpu_set(node.get("nodeset"))
+        vm.setdefault("numa", D()).setdefault(numa_id, D()).host_numa = nodeset
+
+    for page in xml.findall("./memoryBacking/hugepages/page"):
+        node_set = parse_cpu_set(page.get("nodeset"))
+        size = int(page.get("size")) * multiplier(page.get("unit"))
+        for numa in vm.get("numa", D()).values():
+            if node_set == numa.get("host_numa"):
+                numa.hugepage_size = size
 
 
 def xpath(node: ET.Element, path: str) -> ET.Element:

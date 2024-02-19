@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024 Robin Jarry
 
-import math
 import re
 import typing
 
