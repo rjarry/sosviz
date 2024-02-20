@@ -76,7 +76,7 @@ def vm_cpu(vm, xml):
     for vcpupin in xml.findall("./cputune/vcpupin"):
         vcpu = int(vcpupin.get("vcpu"))
         cpuset = parse_cpu_set(vcpupin.get("cpuset"))
-        vm.setdefault("vcpu-pinning", D())[vcpu] = cpuset
+        vm.setdefault("vcpu_pinning", D())[vcpu] = cpuset
 
 
 def vm_memory(vm, xml):

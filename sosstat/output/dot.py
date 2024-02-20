@@ -14,14 +14,12 @@ from ..collect import D
 
 
 def render(report: D, **opts):
-    graph = SOSGraph()
-    graph.build(report)
-    print(graph.source())
+    print(SOSGraph(report).source())
 
 
 class SOSGraph:
 
-    def __init__(self):
+    def __init__(self, report: D):
         self.dot = graphviz.Graph(
             name="sosstat",
             node_attr={
@@ -44,17 +42,21 @@ class SOSGraph:
         )
         self.cur = self.dot
         self.stack = []
-        self.links = []
+        self.links = set()
+        self.report = report
+        self.build()
 
     def source(self):
         return self.dot.source
 
-    def add_edge(self, a, b, **kwargs):
-        for x, y, _ in self.links:
-            if (a, b) == (x, y) or (b, a) == (x, y):
-                # check for duplicate links
-                return
-        self.links.append((a, b, kwargs))
+    def edge(self, a, b, force=False, **kwargs):
+        link = frozenset((a, b))
+        if link in self.links and not force:
+            # check for duplicate links
+            return
+        self.links.add(link)
+        if "label" in kwargs:
+            kwargs["label"] = format_label(kwargs["label"])
         self.dot.edge(a, b, **kwargs)
 
     @contextlib.contextmanager
@@ -88,17 +90,18 @@ class SOSGraph:
             kwargs["tooltip"] = format_label(kwargs["tooltip"])
         self.cur.node(name, format_label(label), **kwargs)
 
-    def build(self, report: D):
+    def build(self):
+        r = self.report
         label = [
-            f"<b>{report.hardware.system}</b>",
-            f"<i>linux {report.software.kernel}</i>",
-            report.software.redhat_release,
-            report.software.rhosp_release,
+            f"<b>{r.hardware.system}</b>",
+            f"<i>linux {r.software.kernel}</i>",
+            r.software.redhat_release,
+            r.software.rhosp_release,
         ]
         with self.cluster(label):
             # vms
-            for vm in report.get("vms", {}).values():
-                with self.cluster(vm.name, style="solid"):
+            for vm in r.get("vms", {}).values():
+                with self.cluster(f"VM {vm.name}", style="solid"):
                     for i, numa in vm.get("numa", {}).items():
                         with self.cluster(f"numa {i}", style="dotted"):
                             with self.group(rank="source"):
@@ -108,33 +111,34 @@ class SOSGraph:
 
             # linux interfaces
             with self.cluster("linux net devices"):
-                for iface in report.get("interfaces", D()).values():
+                for iface in r.get("interfaces", D()).values():
                     if iface.get("kind") == "tun" and not iface.get("ip"):
                         continue
                     self.phy_iface(iface)
 
             # openvswitch
-            label = [f"<b>OVS {report.ovs.config.ovs_version}</b>"]
-            if report.ovs.config.get("dpdk_initialized"):
-                label.append(report.ovs.config.dpdk_version)
-                label.append(bit_list(report.ovs.config.dpdk_cores))
+            label = [f"<b>OVS {r.ovs.config.ovs_version}</b>"]
+            if r.ovs.config.get("dpdk_initialized"):
+                label.append(r.ovs.config.dpdk_version)
             with self.cluster(label, color="green"):
-                for br in report.get("ovs", D()).get("bridges", D()).values():
+                for br in r.get("ovs", D()).get("bridges", D()).values():
                     self.ovs_bridge(br)
-                for port in report.get("ovs", D()).get("ports", D()).values():
+                for port in r.get("ovs", D()).get("ports", D()).values():
                     if port.type in ("internal", "vxlan"):
                         continue
                     if port.type == "patch":
-                        self.add_edge(
+                        self.edge(
                             f"ovs_br_{safe(port.bridge)}",
-                            f"ovs_br_{safe(report.ovs.ports[port.options.peer].bridge)}",
+                            f"ovs_br_{safe(r.ovs.ports[port.options.peer].bridge)}",
                             style="dashed",
                             color="green",
                         )
                         continue
                     self.ovs_port(port)
+                self.ovs_pmds(r.ovs)
 
-            for numa in report.get("numa", D()).values():
+            # physical CPU/memory
+            for numa in r.get("numa", D()).values():
                 with self.cluster(f"phy numa {numa.id}"):
                     self.phy_numa(numa)
 
@@ -150,7 +154,7 @@ class SOSGraph:
             color="red",
         )
         for h in numa.get("host_numa", []):
-            self.add_edge(
+            self.edge(
                 f"{safe(vm.name)}_memory_{numa.id}",
                 f"memory_{h}",
                 style="dashed",
@@ -183,11 +187,11 @@ class SOSGraph:
             labels.append(f"tun {iface.tun_type}")
         if "device" in iface:
             labels.append(iface.device)
-            self.add_edge(
+            self.edge(
                 f"phy_{safe(iface.name)}",
                 f"pci_{safe(iface.device)}",
                 style="dashed",
-                colo="orange",
+                color="orange",
             )
 
         for ip in iface.get("ip", []):
@@ -206,14 +210,17 @@ class SOSGraph:
             tooltip=tooltips,
         )
         if "link" in iface:
-            self.add_edge(
-                f"phy_{safe(iface.name)}", f"phy_{safe(iface.link)}", style="dashed"
+            self.edge(
+                f"phy_{safe(iface.name)}",
+                f"phy_{safe(iface.link)}",
+                style="dashed",
+                color="green",
             )
         if "master" in iface:
-            self.add_edge(
+            self.edge(
                 f"phy_{safe(iface.master)}",
                 f"phy_{safe(iface.name)}",
-                style="dashed",
+                style="solid",
                 color="green",
             )
 
@@ -232,7 +239,7 @@ class SOSGraph:
         ]
         if port.type == "dpdkvhostuserclient":
             labels.append("type dpdkvhostuser")
-            self.add_edge(
+            self.edge(
                 f"vm_iface_{safe(port.name)}",
                 f"ovs_port_{safe(port.name)}",
                 style="dashed",
@@ -241,13 +248,16 @@ class SOSGraph:
         if port.type == "bond":
             labels.append("type bond")
 
+        if "tag" in port:
+            labels.append(f'<font color="green">VLAN {port.tag}</font>')
+
         self.node(
             f"ovs_port_{safe(port.name)}",
             labels,
             color="green",
             shape="ellipse",
         )
-        self.add_edge(f"ovs_port_{safe(port.name)}", f"ovs_br_{safe(port.bridge)}")
+        self.edge(f"ovs_port_{safe(port.name)}", f"ovs_br_{safe(port.bridge)}")
 
         if port.type == "bond":
             for member in port.members.values():
@@ -258,7 +268,7 @@ class SOSGraph:
                 if member.type == "dpdk":
                     labels.append(f"{member.options.dpdk_devargs}")
                     labels.append(f"n_rxq {member.options.get('n_rxq', 1)}")
-                    self.add_edge(
+                    self.edge(
                         f"ovs_port_{safe(member.name)}",
                         f"pci_{safe(member.options.dpdk_devargs)}",
                         style="dashed",
@@ -270,25 +280,109 @@ class SOSGraph:
                     color="green",
                     shape="ellipse",
                 )
-                self.add_edge(
+                self.edge(
                     f"ovs_port_{safe(port.name)}",
                     f"ovs_port_{safe(member.name)}",
                     style="solid",
                     color="green",
                 )
 
-    def phy_numa(self, numa: D):
-        with self.group(rank="sink"):
-            self.node(
-                f"cpus_{numa.id}", f"<b>cpus {bit_list(numa.cpus)}</b>", color="blue"
-            )
-            labels = [f"<b>memory {human_readable(numa.total_memory, 1024)}</b>"]
-            for size, num in numa.get("hugepages", {}).items():
-                if not num:
-                    continue
-                labels.append(f"{human_readable(size, 1024)} hugepages: {num}")
+    BLUES = (
+        "cornflowerblue",
+        "dodgerblue",
+        "mediumturquoise",
+        "deepskyblue",
+        "steelblue",
+        "navy",
+        "turquoise",
+        "darkslateblue",
+        "darkcyan",
+    )
 
-            self.node(f"memory_{numa.id}", labels, color="red")
+    def ovs_pmds(self, ovs: D):
+        with self.cluster("DPDK PMD cores", style="dotted", color="blue", rank="sink"):
+            for pmd in ovs.pmds.values():
+                color = self.BLUES[pmd.core % len(self.BLUES)]
+                self.node(
+                    f"ovs_pmd_{pmd.core}",
+                    f"<b>Core {pmd.core} NUMA {pmd.numa}</b>",
+                    color=color,
+                )
+                for rxq in pmd.rxqs:
+                    self.edge(
+                        f"ovs_pmd_{pmd.core}",
+                        f"ovs_port_{safe(rxq.port)}",
+                        force=True,
+                        style="bold",
+                        color=color,
+                    )
+
+    def irq_counters_tooltip(self, cpus: set[int]) -> str:
+        tooltip = []
+        for c in cpus:
+            counter = 0
+            bound = 0
+            for irq in self.report.irqs.values():
+                if not irq.irq.isdigit():
+                    continue
+                if c in irq.get("effective_affinity", []):
+                    bound += 1
+                counter += irq.counters[c]
+            if counter < 42:  # XXX: how about 1337 maybe?
+                continue
+            tooltip.append(f"CPU {c} bound_irqs={bound} interrupts={counter}")
+        return format_label(tooltip)
+
+    def phy_numa(self, numa: D):
+        model = "<b>Unknown Processor Model</b>"
+        for i, proc in enumerate(self.report.hardware.processor):
+            if i == numa.id:
+                model = f"<b>{proc.model}</b>"
+        with self.cluster(model, style="dotted", color="blue"):
+            housekeeping_cpus = set(numa.cpus)
+
+            ovs_cpus = set()
+            for pmd in self.report.ovs.pmds.values():
+                if pmd.numa != numa.id:
+                    continue
+                ovs_cpus.add(pmd.core)
+            self.node(
+                f"phy_cpus_ovs_{numa.id}",
+                ["<b>OVS DPDK</b>", f"cpus {bit_list(ovs_cpus)}"],
+                tooltip=self.irq_counters_tooltip(ovs_cpus),
+                color="blue",
+            )
+            housekeeping_cpus -= ovs_cpus
+
+            for vm in self.report.get("vms", {}).values():
+                for vnuma in vm.numa.values():
+                    if numa.id not in vnuma.host_numa:
+                        continue
+                    host_cpus = set()
+                    for vcpu in vnuma.vcpus:
+                        host_cpus.update(vm.vcpu_pinning[vcpu])
+                    self.node(
+                        f"phy_cpus_{safe(vm.name)}_{numa.id}",
+                        [f"<b>VM {vm.name}</b>", f"cpus {bit_list(host_cpus)}"],
+                        tooltip=self.irq_counters_tooltip(host_cpus),
+                        color="blue",
+                    )
+                    housekeeping_cpus -= host_cpus
+
+            self.node(
+                f"phy_cpus_housekeeping_{numa.id}",
+                ["<b>Housekeeping</b>", f"cpus {bit_list(housekeeping_cpus)}"],
+                tooltip=self.irq_counters_tooltip(housekeeping_cpus),
+                color="blue",
+            )
+
+        labels = [f"<b>memory {human_readable(numa.total_memory, 1024)}</b>"]
+        for size, num in numa.get("hugepages", {}).items():
+            if not num:
+                continue
+            labels.append(f"{human_readable(size, 1024)} hugepages: {num}")
+
+        self.node(f"memory_{numa.id}", labels, color="red")
 
         for nic in numa.get("pci_nics", {}).values():
             labels = [f"<b>{nic.pci_id}</b>"]
