@@ -18,7 +18,6 @@ $(VENV)/.stamp: $(VENV)/bin/activate requirements-dev.txt pyproject.toml
 	@touch $@
 
 PY_FILES = $(shell find * -name '*.py')
-PY_FILES += bin/sosstat
 J ?= $(shell nproc)
 
 .PHONY: lint

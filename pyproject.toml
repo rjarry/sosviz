@@ -7,14 +7,16 @@ name = "sosstat"
 version = "0.1.0"
 description = "Information extractor from sos reports"
 dependencies = [
-  "graphviz",
+	"graphviz",
 ]
-requires-python = ">= 3.6"
+requires-python = ">= 3.8"
 readme = "README.md"
 authors = [
-  {name = "Veda Barrenkala", email = "vbarrenk@redhat.com"},
-  {name = "Robin Jarry", email = "rjarry@redhat.com"},
+	{name = "Robin Jarry", email = "rjarry@redhat.com"},
 ]
+
+[project.scripts]
+sosstat = "sosstat.__main__:main"
 
 [tool.isort]
 multi_line_output = 3

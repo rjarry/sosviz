@@ -8,18 +8,28 @@ Collect information from an sosreport and export it in other formats.
 import argparse
 import pathlib
 import sys
+from importlib import metadata
 
 from . import collect, output
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, prog="sosstat")
     parser.add_argument(
         "path",
         metavar="PATH",
         type=pathlib.Path,
         help="""
         Path to an uncompressed sosreport folder.
+        """,
+    )
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"%(prog)s {metadata.version('sosstat')}",
+        help="""
+        Show version and exit.
         """,
     )
     parser.add_argument(
