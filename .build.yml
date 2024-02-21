@@ -5,6 +5,8 @@ packages:
   - twine
 sources:
   - "https://git.sr.ht/~rjarry/sosstat"
+secrets:
+  - f5042c27-d774-4581-96de-292f82ee8301
 tasks:
   - lint: |
       make -C linux-tools lint
