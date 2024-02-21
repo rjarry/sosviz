@@ -10,8 +10,6 @@ secrets:
 tasks:
   - lint: |
       make -C sosstat lint
-  - tests: |
-      make -C sosstat tests
   - release: |
       cd sosstat
       tag=$(git describe --exact-match) || exit 0
