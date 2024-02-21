@@ -57,7 +57,7 @@ def parse_report(path: pathlib.Path, data: dict):
 def ovs_ports(ovs, path):
     ovs.bridges = bridges = D()
     ovs.ports = ports = D()
-    for f in path.glob( "sos_commands/openvswitch/ovs-vsctl*_show"):
+    for f in path.glob("sos_commands/openvswitch/ovs-vsctl*_show"):
         for block in re.split(r"^    Bridge ", f.read_text(), flags=re.MULTILINE):
             br_name, block = block.split("\n", 1)
             datapath = "???"

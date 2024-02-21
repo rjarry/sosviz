@@ -1,9 +1,6 @@
 ---
 image: alpine/latest
 packages:
-  - ethtool
-  - graphviz
-  - iproute2
   - py3-build
   - twine
 sources:

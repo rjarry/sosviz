@@ -1,5 +1,4 @@
 graphviz
-mysqlclient
 black
 isort
 pylint
