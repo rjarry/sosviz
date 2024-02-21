@@ -112,8 +112,6 @@ class SOSGraph:
             # linux interfaces
             with self.cluster("linux net devices"):
                 for iface in r.get("interfaces", D()).values():
-                    if iface.get("kind") == "tun" and not iface.get("ip"):
-                        continue
                     self.phy_iface(iface)
 
             # openvswitch
@@ -143,48 +141,58 @@ class SOSGraph:
                     self.phy_numa(numa)
 
     def vm_numa(self, vm: D, numa: D):
-        self.node(
-            f"{safe(vm.name)}_cpus_{numa.id}",
-            f"<b>vcpus {bit_list(numa.vcpus)}</b>",
-            color="blue",
-        )
-        self.node(
-            f"{safe(vm.name)}_memory_{numa.id}",
-            f"<b>memory {human_readable(numa.memory, 1024)}</b>",
-            color="red",
-        )
+        labels = [f"<b>vCPUs {bit_list(numa.vcpus)}</b>"]
+        host_cpus = set()
+        for vcpu in numa.vcpus:
+            host_cpus.update(vm.vcpu_pinning[vcpu])
+        labels.append(f"host CPUs {bit_list(host_cpus)}")
+        cpu_numas = set()
+        for n in self.report.numa.values():
+            if host_cpus & n.cpus:
+                cpu_numas.add(n.id)
+        labels.append(f"host NUMA {bit_list(cpu_numas)}")
+        self.node(f"{safe(vm.name)}_cpus_{numa.id}", labels, color="blue")
+
+        labels = [f"<b>memory {human_readable(numa.memory, 1024)}</b>"]
         for h in numa.get("host_numa", []):
-            self.edge(
-                f"{safe(vm.name)}_memory_{numa.id}",
-                f"memory_{h}",
-                style="dashed",
-                color="red",
-            )
+            labels.append(f"host NUMA {h}")
+        self.node(f"{safe(vm.name)}_memory_{numa.id}", labels, color="red")
 
     def vm_iface(self, iface: D) -> str:
         labels = [f"<b>{iface.type}</b>"]
-        name = "unset"
+        name = None
+        peer = None
         if "socket" in iface:
             name = os.path.basename(iface.socket)
+            peer = f"ovs_port_{safe(name)}"
         elif "host_dev" in iface:
             name = iface.host_dev
-        labels.append(name)
+            peer = f"pci_{safe(name)}"
+        elif "net_dev" in iface:
+            name = iface.net_dev
+            peer = f"phy_{safe(name)}"
+        if name:
+            labels.append(name)
         if "bridge" in iface:
             labels.append(f"<i>bridge {iface.bridge}</i>")
         if "queues" in iface:
             labels.append(f"<i>queues {iface.queues}</i>")
         self.node(f"vm_iface_{safe(name)}", labels, color="orange")
+        if peer:
+            self.edge(f"vm_iface_{safe(name)}", peer, style="dashed", color="orange")
 
     def phy_iface(self, iface: D):
         labels = [f"<b>{iface.name}</b>"]
 
         kind = iface.get("kind")
-        if kind == "bond":
-            labels.append(f"bond {iface.bond_mode}")
-        if kind == "vlan":
-            labels.append(f"vlan {iface.vlan}")
-        if kind == "tun":
-            labels.append(f"tun {iface.tun_type}")
+        if kind == "bond" and "bond_mode" in iface:
+            kind += f" {iface.bond_mode}"
+        if kind == "vlan" and "vlan" in iface:
+            kind += f" {iface.vlan}"
+        if kind == "tun" and "tun_type" in iface:
+            kind += f" {iface.tun_type}"
+        if kind:
+            labels.append(kind)
         if "device" in iface:
             labels.append(iface.device)
             self.edge(
@@ -239,12 +247,6 @@ class SOSGraph:
         ]
         if port.type == "dpdkvhostuserclient":
             labels.append("type dpdkvhostuser")
-            self.edge(
-                f"vm_iface_{safe(port.name)}",
-                f"ovs_port_{safe(port.name)}",
-                style="dashed",
-                color="orange",
-            )
         if port.type == "bond":
             labels.append("type bond")
 
@@ -348,7 +350,7 @@ class SOSGraph:
                 ovs_cpus.add(pmd.core)
             self.node(
                 f"phy_cpus_ovs_{numa.id}",
-                ["<b>OVS DPDK</b>", f"cpus {bit_list(ovs_cpus)}"],
+                ["<b>OVS DPDK</b>", f"CPUs {bit_list(ovs_cpus)}"],
                 tooltip=self.irq_counters_tooltip(ovs_cpus),
                 color="blue",
             )
@@ -363,7 +365,7 @@ class SOSGraph:
                         host_cpus.update(vm.vcpu_pinning[vcpu])
                     self.node(
                         f"phy_cpus_{safe(vm.name)}_{numa.id}",
-                        [f"<b>VM {vm.name}</b>", f"cpus {bit_list(host_cpus)}"],
+                        [f"<b>VM {vm.name}</b>", f"CPUs {bit_list(host_cpus)}"],
                         tooltip=self.irq_counters_tooltip(host_cpus),
                         color="blue",
                     )
@@ -371,7 +373,7 @@ class SOSGraph:
 
             self.node(
                 f"phy_cpus_housekeeping_{numa.id}",
-                ["<b>Housekeeping</b>", f"cpus {bit_list(housekeeping_cpus)}"],
+                ["<b>Housekeeping</b>", f"CPUs {bit_list(housekeeping_cpus)}"],
                 tooltip=self.irq_counters_tooltip(housekeeping_cpus),
                 color="blue",
             )

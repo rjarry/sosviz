@@ -42,8 +42,7 @@ RXQ_RE = re.compile(
 def parse_report(path: pathlib.Path, data: dict):
     data.ovs = ovs = D()
     ovs.config = conf = D()
-    f = path / "sos_commands/openvswitch/ovs-vsctl_-t_5_list_Open_vSwitch"
-    if f.is_file():
+    for f in path.glob("sos_commands/openvswitch/ovs-vsctl*_list_Open_vSwitch"):
         ovs_to_dict(f.read_text(), conf)
     if "other_config" in conf and "pmd_cpu_mask" in conf.other_config:
         mask = conf.other_config.pmd_cpu_mask
@@ -58,8 +57,7 @@ def parse_report(path: pathlib.Path, data: dict):
 def ovs_ports(ovs, path):
     ovs.bridges = bridges = D()
     ovs.ports = ports = D()
-    f = path / "sos_commands/openvswitch/ovs-vsctl_-t_5_show"
-    if f.is_file():
+    for f in path.glob( "sos_commands/openvswitch/ovs-vsctl*_show"):
         for block in re.split(r"^    Bridge ", f.read_text(), flags=re.MULTILINE):
             br_name, block = block.split("\n", 1)
             datapath = "???"

@@ -50,6 +50,6 @@ def parse_report(path: pathlib.Path, data: D):
 
 def split_block(block: str) -> D:
     fields = D()
-    for match in re.finditer(r"^\t([\w\s-]+):\s+(.+)$", block, flags=re.MULTILINE):
+    for match in re.finditer(r"^\t([\w\s-]+):\s(.*)$", block, flags=re.MULTILINE):
         fields[match.group(1).strip()] = match.group(2).strip()
     return fields

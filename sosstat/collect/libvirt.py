@@ -33,7 +33,7 @@ def parse_report(path: pathlib.Path, data: D):
                     D(
                         type="virtio-kernel",
                         bridge=xpath(iface, "source").get("bridge"),
-                        host_dev=xpath(iface, "target").get("dev"),
+                        net_dev=xpath(iface, "target").get("dev"),
                         ovs_port=xpath(iface, "virtualport/parameters").get(
                             "interfaceid"
                         ),
@@ -100,7 +100,7 @@ def vm_memory(vm, xml):
 def xpath(node: ET.Element, path: str) -> ET.Element:
     n = node.find(path)
     if n is None:
-        n = ET.Element()
+        n = ET.Element(pathlib.Path(path).name)
     return n
 
 

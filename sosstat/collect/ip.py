@@ -11,11 +11,27 @@ IFACE_RE = re.compile(
     r"""
     ^(?P<name>[^@:]+?)(?:@(?P<link>[^:]+))?:\s+
         <(?P<flags>[\w,-]+)>\s+
-        mtu\s+(?P<mtu>\d+)(?:\s+(?:qdisc|mq))*
-        (?:\s+master\s+(?P<master>\S+)\s)?.*\n
+        mtu\s+(?P<mtu>\d+)
+        (?:.*?\smaster\s+(?P<master>\S+)\s)?.*\n
     ^\s+link/ether\s+(?P<mac>[a-f\d:]+)\s.*\n
     (?:^\s+
-        (?P<kind>\S+)\s+
+        (?P<kind>
+            vlan
+            |
+            bridge
+            |
+            bond
+            |
+            veth
+            |
+            vxlan
+            |
+            tun
+            |
+            bond_slave
+            |
+            bridge_slave
+        )\s+
         (?:
             protocol\s+\S+\s+id\s+(?P<vlan>\d+)
             |
@@ -24,7 +40,7 @@ IFACE_RE = re.compile(
             mode\s+(?P<bond_mode>\S+)
             |
             state\s+(?P<slave_state>\S+)
-        )\s.*
+        )?.*
     \n)?
     """,
     re.VERBOSE | re.MULTILINE,
