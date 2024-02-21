@@ -6,9 +6,9 @@ Collect information from an sosreport and export it in other formats.
 """
 
 import argparse
+from importlib import metadata
 import pathlib
 import sys
-from importlib import metadata
 
 from . import collect, output
 
