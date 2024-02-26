@@ -14,43 +14,9 @@ def parse_report(path: pathlib.Path, data: D):
         xml = ET.parse(f).getroot()
         name = xml.find("./name").text
         vms[name] = vm = D(name=name)
-
         vm_cpu(vm, xml)
         vm_memory(vm, xml)
-
-        for iface in xml.findall("./devices/interface"):
-            iftype = iface.get("type")
-            if iftype == "vhostuser":
-                vm.setdefault("interfaces", []).append(
-                    D(
-                        type=iftype,
-                        queues=int(xpath(iface, "driver").get("queues", "1")),
-                        socket=xpath(iface, "source").get("path"),
-                    )
-                )
-            elif iftype == "bridge":
-                vm.setdefault("interfaces", []).append(
-                    D(
-                        type="virtio-kernel",
-                        bridge=xpath(iface, "source").get("bridge"),
-                        net_dev=xpath(iface, "target").get("dev"),
-                        ovs_port=xpath(iface, "virtualport/parameters").get(
-                            "interfaceid"
-                        ),
-                    )
-                )
-
-        for pci in xml.findall("./devices/hostdev[@type='pci']/source/address"):
-            domain = int(pci.get("domain", "0x0"), 16)
-            bus = int(pci.get("bus", "0x0"), 16)
-            slot = int(pci.get("slot", "0x0"), 16)
-            function = int(pci.get("function", "0x0"), 16)
-            vm.setdefault("interfaces", []).append(
-                D(
-                    type="sriov",
-                    host_dev=f"{domain:04x}:{bus:02x}:{slot:02x}.{function:01x}",
-                )
-            )
+        vm_interfaces(vm, xml)
 
 
 def vm_cpu(vm, xml):
@@ -95,6 +61,53 @@ def vm_memory(vm, xml):
         for numa in vm.get("numa", D()).values():
             if node_set == numa.get("host_numa"):
                 numa.hugepage_size = size
+
+
+def vm_interfaces(vm, xml):
+    for iface in xml.findall("./devices/interface"):
+        iftype = iface.get("type")
+        if iftype == "vhostuser":
+            vm.setdefault("interfaces", []).append(
+                D(
+                    type=iftype,
+                    queues=int(xpath(iface, "driver").get("queues", "1")),
+                    socket=xpath(iface, "source").get("path"),
+                )
+            )
+        elif iftype == "bridge":
+            vm.setdefault("interfaces", []).append(
+                D(
+                    type="virtio-kernel",
+                    bridge=xpath(iface, "source").get("bridge"),
+                    net_dev=xpath(iface, "target").get("dev"),
+                    ovs_port=xpath(iface, "virtualport/parameters").get("interfaceid"),
+                )
+            )
+        elif iftype == "hostdev":
+            src = iface.find("./source/address")
+            domain = int(src.get("domain", "0x0"), 16)
+            bus = int(src.get("bus", "0x0"), 16)
+            slot = int(src.get("slot", "0x0"), 16)
+            function = int(src.get("function", "0x0"), 16)
+            dev = D(
+                type="sriov",
+                host_dev=f"{domain:04x}:{bus:02x}:{slot:02x}.{function:01x}",
+            )
+            for vlan in iface.findall("./vlan/tag"):
+                dev.vlan = int(vlan.get("id"))
+            vm.setdefault("interfaces", []).append(dev)
+
+    for pci in xml.findall("./devices/hostdev[@type='pci']/source/address"):
+        domain = int(pci.get("domain", "0x0"), 16)
+        bus = int(pci.get("bus", "0x0"), 16)
+        slot = int(pci.get("slot", "0x0"), 16)
+        function = int(pci.get("function", "0x0"), 16)
+        vm.setdefault("interfaces", []).append(
+            D(
+                type="sriov",
+                host_dev=f"{domain:04x}:{bus:02x}:{slot:02x}.{function:01x}",
+            )
+        )
 
 
 def xpath(node: ET.Element, path: str) -> ET.Element:

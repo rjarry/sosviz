@@ -173,6 +173,8 @@ class SOSGraph:
             peer = f"phy_{safe(name)}"
         if name:
             labels.append(name)
+        if "vlan" in iface:
+            labels.append(f"VLAN {iface.vlan}")
         if "bridge" in iface:
             labels.append(f"<i>bridge {iface.bridge}</i>")
         if "queues" in iface:
