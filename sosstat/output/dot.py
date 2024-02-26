@@ -387,19 +387,42 @@ class SOSGraph:
             labels.append(f"{human_readable(size, 1024)} hugepages: {num}")
 
         self.node(f"memory_{numa.id}", labels, color="red")
+        self.phy_pci_nics(numa)
 
+    def phy_pci_nics(self, numa: D):
+        pci_bridges = {}
         for nic in numa.get("pci_nics", {}).values():
-            labels = [f"<b>{nic.pci_id}</b>"]
-            if "kernel_driver" in nic:
-                labels.append(nic.kernel_driver)
-            self.node(
-                f"pci_{safe(nic.pci_id)}", labels, tooltip=nic.device, color="orange"
-            )
+            pci_bridges.setdefault(nic.pci_bridge, []).append(nic)
+
+        for bridge, nics in pci_bridges.items():
+            if len(nics) == 1:
+                labels = [f"<b>{nics[0].pci_id}</b>"]
+                if "kernel_driver" in nics[0]:
+                    labels.append(nics[0].kernel_driver)
+                self.node(
+                    f"pci_{safe(nics[0].pci_id)}",
+                    labels,
+                    tooltip=nics[0].device,
+                    color="orange",
+                )
+            else:
+                with self.cluster(
+                    f"PCI bridge {bridge}", style="dotted", color="orange"
+                ):
+                    for nic in nics:
+                        labels = [f"<b>{nic.pci_id}</b>"]
+                        if "kernel_driver" in nic:
+                            labels.append(nic.kernel_driver)
+                        self.node(
+                            f"pci_{safe(nic.pci_id)}",
+                            labels,
+                            tooltip=nic.device,
+                            color="orange",
+                        )
 
 
 def safe(n):
     return re.sub(r"\W", "_", n)
-
 
 
 def wrap_text(text: str, margin: int) -> list[str]:
