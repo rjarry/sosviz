@@ -150,12 +150,12 @@ class SOSGraph:
         for n in self.report.numa.values():
             if host_cpus & n.cpus:
                 cpu_numas.add(n.id)
-        labels.append(f"host NUMA {bit_list(cpu_numas)}")
+        labels.append(f'<font color="blue">host NUMA {bit_list(cpu_numas)}</font>')
         self.node(f"{safe(vm.name)}_cpus_{numa.id}", labels, color="blue")
 
         labels = [f"<b>memory {human_readable(numa.memory, 1024)}</b>"]
         for h in numa.get("host_numa", []):
-            labels.append(f"host NUMA {h}")
+            labels.append(f'<font color="red">host NUMA {h}</font>')
         self.node(f"{safe(vm.name)}_memory_{numa.id}", labels, color="red")
 
     def vm_iface(self, iface: D) -> str:
@@ -476,6 +476,6 @@ def format_label(lines: list[str], max_width: int = 0) -> str:
         for line in lines:
             out += wrap_text(line, max_width)
         lines = out
-    if any(l.startswith("<") for l in lines):
+    if any(line.startswith("<") for line in lines):
         return "<" + "<br/>".join(lines) + ">"
     return "\\n".join(lines)
