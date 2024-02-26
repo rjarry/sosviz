@@ -60,6 +60,7 @@ def ovs_ports(ovs, path):
     for f in path.glob("sos_commands/openvswitch/ovs-vsctl*_show"):
         for block in re.split(r"^    Bridge ", f.read_text(), flags=re.MULTILINE):
             br_name, block = block.split("\n", 1)
+            br_name = strip_quotes(br_name)
             datapath = "???"
             match = re.search(r"datapath_type: (\S+)", block)
             if match:
@@ -67,13 +68,13 @@ def ovs_ports(ovs, path):
             for match in PORT_RE.finditer(block):
                 ifaces = D()
                 for m in IFACE_RE.finditer(match.group("ifaces")):
-                    name = m.group("name")
+                    name = strip_quotes(m.group("name"))
                     ifaces[name] = D(name=name, type=m.group("type"))
                     if m.group("options"):
-                        ifaces[m.group("name")].options = cast_value(m.group("options"))
+                        ifaces[name].options = cast_value(m.group("options"))
                 if not ifaces:
                     continue
-                port_name = match.group("name")
+                port_name = strip_quotes(match.group("name"))
                 port = D(name=port_name, bridge=br_name)
                 if len(ifaces) > 1:
                     port.type = "bond"
@@ -84,14 +85,18 @@ def ovs_ports(ovs, path):
                     port.tag = int(match.group("tag"))
 
                 ports[port_name] = port
-                bridges.setdefault(br_name, D(name=br_name, ports=0)).ports += 1
+                bridges.setdefault(
+                    br_name, D(name=br_name, ports=0, of_rules=0)
+                ).ports += 1
                 bridges[br_name].datapath = datapath
 
     for name, br in bridges.items():
-        f = path / f"sos_commands/openvswitch/ovs-ofctl_dump-flows_{name}"
-        if not f.is_file():
-            continue
-        br.of_rules = len(f.read_text().splitlines()) - 1
+        for f in path.glob(f"sos_commands/openvswitch/ovs-ofctl*_dump-flows_{name}"):
+            br.of_rules = len(f.read_text().splitlines()) - 1
+
+
+def strip_quotes(s: str) -> str:
+    return s.strip("\"' \t")
 
 
 def ovs_pmds(ovs, path):
@@ -115,7 +120,7 @@ def ovs_pmds(ovs, path):
                 port, rxq, usage = match.groups()
                 pmds[core].rxqs.append(
                     D(
-                        port=port,
+                        port=strip_quotes(port),
                         rxq=int(rxq),
                         usage=int(usage),
                     )
@@ -131,7 +136,7 @@ def ovs_to_dict(block: str, d: dict):
         value = cast_value(value)
         if value in ("", [], {}):
             continue
-        d[key.replace("-", "_")] = value
+        d[strip_quotes(key.replace("-", "_"))] = value
 
 
 def cast_value(value: str):
@@ -158,4 +163,4 @@ def cast_value(value: str):
         return False
     if value.isdigit():
         return int(value)
-    return value.strip('"')
+    return strip_quotes(value)
