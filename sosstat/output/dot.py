@@ -56,7 +56,7 @@ class SOSGraph:
             return
         self.links.add(link)
         if "label" in kwargs:
-            kwargs["label"] = format_label(kwargs["label"])
+            kwargs["label"] = format_label(kwargs["label"], max_width=30)
         self.dot.edge(a, b, **kwargs)
 
     @contextlib.contextmanager
@@ -88,7 +88,7 @@ class SOSGraph:
             kwargs.setdefault("margin", "0")
         if "tooltip" in kwargs:
             kwargs["tooltip"] = format_label(kwargs["tooltip"])
-        self.cur.node(name, format_label(label), **kwargs)
+        self.cur.node(name, format_label(label, max_width=30), **kwargs)
 
     def build(self):
         r = self.report
@@ -401,9 +401,58 @@ def safe(n):
     return re.sub(r"\W", "_", n)
 
 
-def format_label(lines: list[str]) -> str:
+
+def wrap_text(text: str, margin: int) -> list[str]:
+    lines = []
+    more = True
+
+    while more:
+        if len(text) <= margin:
+            # whole text fits in a single line
+            line = text
+            more = False
+        else:
+            # find split point, preferably before margin
+            split = -1
+            width = 0
+            markup = 0
+            for w, t in enumerate(text):
+                if width >= margin and split != -1:
+                    break
+                if t in " \t,>":
+                    split = w
+                if t == "<":
+                    markup += 1
+                elif t == ">":
+                    markup -= 1
+                if markup == 0:
+                    width += 1
+            if split == -1:
+                # no space found to split, print a long line
+                line = text
+                more = False
+            else:
+                line = text[: split + 1]
+                text = text[split + 1 :]
+                # find start of next word
+                while text and text[0] in " \t":
+                    text = text[1:]
+                if not text:
+                    # only trailing whitespace, we're done
+                    more = False
+        lines.append(line)
+
+    return lines
+
+
+def format_label(lines: list[str], max_width: int = 0) -> str:
     if isinstance(lines, str):
         lines = [lines]
+    if max_width:
+        out = []
+        for line in lines:
+            out += wrap_text(line, max_width)
+        lines = out
     if any(l.startswith("<") for l in lines):
         return "<" + "<br/>".join(lines) + ">"
     return "\\n".join(lines)
