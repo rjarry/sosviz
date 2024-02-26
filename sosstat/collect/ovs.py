@@ -31,7 +31,7 @@ RXQ_RE = re.compile(
     r"""
     \s+port:\s+(\S+)
     \s+queue-id:\s+(\d+)
-    \s+\(enabled\)
+    (?:\s+\(enabled\))?
     \s+pmd\susage:\s*(\d+)\s*%
     $
     """,
