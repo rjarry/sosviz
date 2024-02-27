@@ -306,6 +306,8 @@ class SOSGraph:
     )
 
     def ovs_pmds(self, ovs: D):
+        if not ovs.pmds:
+            return
         with self.cluster("DPDK PMD cores", style="dotted", color="blue", rank="sink"):
             for pmd in ovs.pmds.values():
                 color = self.BLUES[pmd.core % len(self.BLUES)]
@@ -352,12 +354,13 @@ class SOSGraph:
                 if pmd.numa != numa.id:
                     continue
                 ovs_cpus.add(pmd.core)
-            self.node(
-                f"phy_cpus_ovs_{numa.id}",
-                ["<b>OVS DPDK</b>", f"CPUs {bit_list(ovs_cpus)}"],
-                tooltip=self.irq_counters_tooltip(ovs_cpus),
-                color="blue",
-            )
+            if ovs_cpus:
+                self.node(
+                    f"phy_cpus_ovs_{numa.id}",
+                    ["<b>OVS DPDK</b>", f"CPUs {bit_list(ovs_cpus)}"],
+                    tooltip=self.irq_counters_tooltip(ovs_cpus),
+                    color="blue",
+                )
             housekeeping_cpus -= ovs_cpus
 
             for vm in self.report.get("vms", {}).values():
