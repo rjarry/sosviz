@@ -76,11 +76,11 @@ def ovs_ports(ovs, path):
                     continue
                 port_name = strip_quotes(match.group("name"))
                 port = D(name=port_name, bridge=br_name)
-                if len(ifaces) > 1:
+                if len(ifaces) == 1 and port_name in ifaces:
+                    port.update(ifaces[port_name])
+                else:
                     port.type = "bond"
                     port.members = ifaces
-                else:
-                    port.update(ifaces[port_name])
                 if match.group("tag"):
                     port.tag = int(match.group("tag"))
 
