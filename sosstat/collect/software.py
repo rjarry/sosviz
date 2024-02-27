@@ -15,10 +15,16 @@ PODMAN_PS_RE = re.compile(r"^[a-f0-9]+\s+(\S+)\s", re.MULTILINE)
 
 def parse_report(path: pathlib.Path, data: D):
     data.software = sw = D()
-    for f in "etc/rhosp-release", "etc/redhat-release":
+
+    for f in ("etc/os-release", "etc/rhosp-release",):
         f = path / f
         if f.is_file():
-            sw[f.name.replace("-", "_")] = f.read_text().strip()
+            value = f.read_text().strip()
+            if f.name == "os-release":
+                match = re.search(r"^PRETTY_NAME=(.+)$", value, flags=re.MULTILINE)
+                if match:
+                    value = match.group(1).strip("'\" ")
+            sw[f.name.replace("-", "_")] = value
     rpms = set()
     for match in RPMS_OF_INTEREST_RE.finditer((path / "installed-rpms").read_text()):
         rpms.add(match.group(1))
@@ -33,6 +39,6 @@ def parse_report(path: pathlib.Path, data: D):
                 containers.add(name)
     sw.containers = containers
 
-    match = re.search(r"/boot/vmlinuz-(\S+)", (path / "proc/cmdline").read_text())
+    match = re.search(r"/vmlinuz-(\S+)", (path / "proc/cmdline").read_text())
     if match:
         sw.kernel = match.group(1)

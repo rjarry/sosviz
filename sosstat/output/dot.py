@@ -95,9 +95,11 @@ class SOSGraph:
         label = [
             f"<b>{r.hardware.system}</b>",
             f"<i>linux {r.software.kernel}</i>",
-            r.software.redhat_release,
-            r.software.rhosp_release,
         ]
+        for sw in "os_release", "rhosp_release":
+            if sw in r.software:
+                label.append(r.software.get(sw))
+
         with self.cluster(label):
             # vms
             for vm in r.get("vms", {}).values():
