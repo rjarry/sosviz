@@ -8,7 +8,8 @@ from . import D
 
 
 def parse_report(path: pathlib.Path, data: D):
-    for node in path.glob("sys/devices/system/node/node*"):
+    nodes = list(path.glob("sys/devices/system/node/node*"))
+    for node in nodes:
         match = re.match(r"^node(\d+)$", node.name)
         if not match:
             continue
@@ -16,9 +17,16 @@ def parse_report(path: pathlib.Path, data: D):
         numa_id = int(match.group(1))
         numa = data.setdefault("numa", D()).setdefault(numa_id, D(id=numa_id))
 
-        match = re.search(r"MemTotal:\s+(\d+)\s*kB", (node / "meminfo").read_text())
+        try:
+            div = 1
+            meminfo = (node / "meminfo").read_text()
+        except FileNotFoundError:
+            dif = len(nodes)
+            meminfo = (path / "proc/meminfo").read_text()
+
+        match = re.search(r"MemTotal:\s+(\d+)\s*kB", meminfo)
         if match:
-            numa.total_memory = int(match.group(1)) * 1024
+            numa.total_memory = int(int(match.group(1)) * 1024 / div)
 
         for huge in node.glob("hugepages/hugepages-*/nr_hugepages"):
             match = re.match(r"^hugepages-(\d+)kB$", huge.parent.name)
