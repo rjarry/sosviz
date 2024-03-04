@@ -8,8 +8,11 @@ from . import D
 
 
 def parse_report(path: pathlib.Path, data: D):
-    data.hardware = hw = D()
-    dmi = (path / "sos_commands/hardware/dmidecode").read_text()
+    data.hardware = hw = D(system="Unknown Hardware", processor=[], memory=[])
+    f = path / "sos_commands/hardware/dmidecode"
+    if not f.is_file():
+        return
+    dmi = f.read_text()
     blocks = re.split(
         r"^Handle 0x[a-fA-F0-9]+, DMI type \d+, \d+ bytes$", dmi, flags=re.MULTILINE
     )
@@ -25,7 +28,7 @@ def parse_report(path: pathlib.Path, data: D):
             b = split_block(block)
             if "Speed" not in b:
                 continue
-            hw.setdefault("memory", []).append(
+            hw.memory.append(
                 D(
                     type=f"{b.Type} {b['Type Detail']}",
                     size=b.Size,
@@ -38,7 +41,7 @@ def parse_report(path: pathlib.Path, data: D):
             b = split_block(block)
             if "Version" not in b:
                 continue
-            hw.setdefault("processor", []).append(
+            hw.processor.append(
                 D(
                     slot=b["Socket Designation"],
                     model=b.Version,

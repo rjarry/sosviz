@@ -5,6 +5,7 @@ import pathlib
 import re
 
 from . import D
+from ..bits import parse_cpu_set
 
 
 def parse_report(path: pathlib.Path, data: D):
@@ -16,6 +17,9 @@ def parse_report(path: pathlib.Path, data: D):
 
         numa_id = int(match.group(1))
         numa = data.setdefault("numa", D()).setdefault(numa_id, D(id=numa_id))
+
+        cpus = parse_cpu_set((node / "cpulist").read_text())
+        siblings = D()
 
         try:
             div = 1
@@ -34,15 +38,19 @@ def parse_report(path: pathlib.Path, data: D):
                 size = int(match.group(1)) * 1024
                 numa.setdefault("hugepages", D())[size] = int(huge.read_text())
 
-        siblings = D()
-        cpus = set()
         for cpu in path.glob("sys/devices/system/cpu/cpu*/topology"):
-            package_id = int((cpu / "physical_package_id").read_text())
-            if package_id != numa_id:
-                continue
-            threads = set(
-                int(t) for t in (cpu / "thread_siblings_list").read_text().split(",")
-            )
+            try:
+                package_id = int((cpu / "physical_package_id").read_text())
+                if package_id != numa_id:
+                    continue
+            except FileNotFoundError:
+                cpu_id = int(re.match(r"cpu(\d+)", cpu.parent.name).group(1))
+                if cpu_id not in cpus:
+                    continue
+            try:
+                threads = parse_cpu_set((cpu / "thread_siblings_list").read_text())
+            except FileNotFoundError:
+                threads = parse_cpu_set((cpu / "core_cpus_list").read_text())
             cpus.update(threads)
             for t in threads:
                 siblings[t] = threads - {t}

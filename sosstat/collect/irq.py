@@ -12,11 +12,13 @@ INTERRUPT_RE = re.compile(r"^\s*(\w+):\s+([\s\d]+)\s+([A-Za-z].+)$", re.MULTILIN
 
 
 def parse_report(path: pathlib.Path, data: D):
-    buf = (path / "proc/interrupts").read_text()
     data.irqs = irqs = D()
     data.cpus = cpus = D()
+    f = path / "proc/interrupts"
+    if not f.is_file():
+        return
 
-    for match in INTERRUPT_RE.finditer(buf):
+    for match in INTERRUPT_RE.finditer(f.read_text()):
         irq, counters, desc = match.groups()
         irqs[irq] = D(
             irq=irq,
