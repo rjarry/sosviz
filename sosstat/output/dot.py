@@ -248,11 +248,17 @@ class SOSGraph:
     def ovs_port(self, port: D):
         labels = [
             f"<b>{port.name}</b>",
+            f"type {port.type}",
         ]
-        if port.type == "dpdkvhostuserclient":
-            labels.append("type dpdkvhostuser")
-        if port.type == "bond":
-            labels.append("type bond")
+        if port.type == "dpdk":
+            labels.append(f"{port.options.dpdk_devargs}")
+            labels.append(f"n_rxq {port.options.get('n_rxq', 1)}")
+            self.edge(
+                f"ovs_port_{safe(port.name)}",
+                f"pci_{safe(port.options.dpdk_devargs)}",
+                style="dashed",
+                color="orange",
+            )
 
         if "tag" in port:
             labels.append(f'<font color="green">VLAN {port.tag}</font>')
