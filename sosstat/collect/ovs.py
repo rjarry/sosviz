@@ -69,7 +69,7 @@ def ovs_ports(ovs, path):
                 ifaces = D()
                 for m in IFACE_RE.finditer(match.group("ifaces")):
                     name = strip_quotes(m.group("name"))
-                    ifaces[name] = D(name=name, type=m.group("type", "tap"))
+                    ifaces[name] = D(name=name, type=m.group("type") or "tap")
                     if m.group("options"):
                         ifaces[name].options = cast_value(m.group("options"))
                 if not ifaces:
