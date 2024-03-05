@@ -22,7 +22,7 @@ PORT_RE = re.compile(
 IFACE_RE = re.compile(
     r"""
     ^\s+Interface\s+(?P<name>.+)\n
-        ^\s+type:\s+(?P<type>.+)\n
+        (?:^\s+type:\s+(?P<type>.+)\n)?
         (?:^\s+options:\s+(?P<options>.+)\n)?
     """,
     re.VERBOSE | re.MULTILINE,
@@ -69,7 +69,7 @@ def ovs_ports(ovs, path):
                 ifaces = D()
                 for m in IFACE_RE.finditer(match.group("ifaces")):
                     name = strip_quotes(m.group("name"))
-                    ifaces[name] = D(name=name, type=m.group("type"))
+                    ifaces[name] = D(name=name, type=m.group("type", "tap"))
                     if m.group("options"):
                         ifaces[name].options = cast_value(m.group("options"))
                 if not ifaces:
