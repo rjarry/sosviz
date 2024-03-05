@@ -61,7 +61,7 @@ def ovs_ports(ovs, path):
         for block in re.split(r"^    Bridge ", f.read_text(), flags=re.MULTILINE):
             br_name, block = block.split("\n", 1)
             br_name = strip_quotes(br_name)
-            datapath = "???"
+            datapath = "system"
             match = re.search(r"datapath_type: (\S+)", block)
             if match:
                 datapath = match.group(1)
