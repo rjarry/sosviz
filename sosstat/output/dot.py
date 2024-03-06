@@ -344,6 +344,7 @@ class SOSGraph:
                 counter += irq.counters[c]
             if counter < 42:  # XXX: how about 1337 maybe?
                 continue
+            counter = human_readable(counter)
             tooltip.append(f"CPU {c} bound_irqs={bound} interrupts={counter}")
         return format_label(tooltip)
 
