@@ -16,7 +16,10 @@ PODMAN_PS_RE = re.compile(r"^[a-f0-9]+\s+(\S+)\s", re.MULTILINE)
 def parse_report(path: pathlib.Path, data: D):
     data.software = sw = D()
 
-    for f in ("etc/os-release", "etc/rhosp-release",):
+    for f in (
+        "etc/os-release",
+        "etc/rhosp-release",
+    ):
         f = path / f
         if f.is_file():
             value = f.read_text().strip()

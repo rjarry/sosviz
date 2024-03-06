@@ -9,11 +9,12 @@ from . import D
 
 IFACE_RE = re.compile(
     r"""
-    ^(?P<name>[^@:]+?)(?:@(?P<link>[^:]+))?:\s+
+    ^(?P<index>\d+):\s+(?P<name>[^@:]+?)(?:@(?P<link>[^:]+))?:\s+
         <(?P<flags>[\w,-]+)>\s+
         mtu\s+(?P<mtu>\d+)
         (?:.*?\smaster\s+(?P<master>\S+)\s)?.*\n
-    ^\s+link/ether\s+(?P<mac>[a-f\d:]+)\s.*\n
+    ^\s+link/ether\s+(?P<mac>[a-f\d:]+)\sbrd\s[a-f\d:]+
+        (?:\s+link-netns(?:id)?\s+(?P<link_netns>\S+))?\s.*\n
     (?:^\s+
         (?P<kind>
             vlan
@@ -48,20 +49,28 @@ IFACE_RE = re.compile(
 ADDR_RE = re.compile(
     r"inet6? (?P<addr>(?:\d+(?:\.\d+){3}|[a-f\d:]+)/\d+) .*scope global",
 )
+IFACE_BLOCK_RE = re.compile(r"^\d+:\s.*\n(\s{4}.+\n)+", re.VERBOSE | re.MULTILINE)
 
 
 def parse_report(path: pathlib.Path, data: D):
-    data.interfaces = ip = D()
-    f = path / "sos_commands/networking/ip_-d_address"
-    if not f.is_file():
-        return
-    for block in re.split(r"^\d+: ", f.read_text(), flags=re.MULTILINE):
-        match = IFACE_RE.search(block)
+    data.interfaces = parse_interfaces(path / "sos_commands/networking/ip_-d_address")
+    data.netns = D()
+    for netns in path.glob("sos_commands/networking/namespaces/*/*_ip_-d_address_show"):
+        data.netns[netns.parent.name] = parse_interfaces(netns)
+
+
+def parse_interfaces(path: pathlib.Path) -> D:
+    ifaces = D()
+    if not path.is_file():
+        return ifaces
+    for block in IFACE_BLOCK_RE.finditer(path.read_text()):
+        match = IFACE_RE.search(block.group())
         if not match:
             continue
         d = D({k: v for (k, v) in match.groupdict().items() if v is not None})
         for dev in path.glob(f"sys/class/net/{d.name}/device"):
             d.device = dev.resolve().name
-        ip[d.name] = d
-        for m in ADDR_RE.finditer(block):
+        ifaces[d.name] = d
+        for m in ADDR_RE.finditer(block.group()):
             d.setdefault("ip", []).append(m.group("addr"))
+    return ifaces
