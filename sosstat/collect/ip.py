@@ -53,17 +53,19 @@ IFACE_BLOCK_RE = re.compile(r"^\d+:\s.*\n(\s{4}.+\n)+", re.VERBOSE | re.MULTILIN
 
 
 def parse_report(path: pathlib.Path, data: D):
-    data.interfaces = parse_interfaces(path / "sos_commands/networking/ip_-d_address")
+    data.interfaces = parse_interfaces(
+        path / "sos_commands/networking/ip_-d_address", path
+    )
     data.netns = D()
     for netns in path.glob("sos_commands/networking/namespaces/*/*_ip_-d_address_show"):
-        data.netns[netns.parent.name] = parse_interfaces(netns)
+        data.netns[netns.parent.name] = parse_interfaces(netns, path)
 
 
-def parse_interfaces(path: pathlib.Path) -> D:
+def parse_interfaces(ip_addr: pathlib.Path, path: pathlib.Path) -> D:
     ifaces = D()
-    if not path.is_file():
+    if not ip_addr.is_file():
         return ifaces
-    for block in IFACE_BLOCK_RE.finditer(path.read_text()):
+    for block in IFACE_BLOCK_RE.finditer(ip_addr.read_text()):
         match = IFACE_RE.search(block.group())
         if not match:
             continue
