@@ -15,6 +15,7 @@ PODMAN_PS_RE = re.compile(r"^[a-f0-9]+\s+(\S+)\s", re.MULTILINE)
 
 def parse_report(path: pathlib.Path, data: D):
     data.software = sw = D()
+    data.hostname = (path / "hostname").read_text().strip()
 
     for f in (
         "etc/os-release",

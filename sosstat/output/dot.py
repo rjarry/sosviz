@@ -43,13 +43,19 @@ class SOSGraph:
         self.cur = self.dot
         self.stack = []
         self.links = set()
+        self.clusters = set()
         self.report = report
         self.build()
 
     def source(self):
         return self.dot.source
 
+    def safe_id(self, n):
+        return re.sub(r"\W", "_", n)
+
     def edge(self, a, b, force=False, **kwargs):
+        a = self.safe_id(a)
+        b = self.safe_id(b)
         link = frozenset((a, b))
         if link in self.links and not force:
             # check for duplicate links
@@ -76,7 +82,10 @@ class SOSGraph:
         kwargs["cluster"] = "true"
         if isinstance(label, list):
             label = label[0]
-        name = safe(label) + "_" + secrets.token_hex(8)
+        name = self.safe_id(label)
+        if name in self.clusters:
+            name += secrets.token_hex(8)
+        self.clusters.add(name)
         return self.subgraph(name=name, **kwargs)
 
     def group(self, **kwargs):
@@ -84,6 +93,7 @@ class SOSGraph:
         return self.subgraph(name=None, **kwargs)
 
     def node(self, name: str, label: str, **kwargs):
+        name = self.safe_id(name)
         if kwargs.get("shape", "rectangle") != "rectangle":
             kwargs.setdefault("margin", "0")
         if "tooltip" in kwargs:
@@ -93,12 +103,18 @@ class SOSGraph:
     def build(self):
         r = self.report
         label = [
-            f"<b>{r.hardware.system}</b>",
+            f"<b>{r.hostname} / <i>{r.hardware.system}</i></b>",
             f"<i>linux {r.software.kernel}</i>",
         ]
         for sw in "os_release", "rhosp_release":
             if sw in r.software:
                 label.append(r.software.get(sw))
+
+        if "ovs" in r:
+            ovs = f"OVS {r.ovs.config.ovs_version}"
+            if r.ovs.config.get("dpdk_initialized"):
+                ovs += f" {r.ovs.config.dpdk_version}"
+            label.append(ovs)
 
         with self.cluster(label):
             # vms
@@ -112,35 +128,45 @@ class SOSGraph:
                         self.vm_iface(iface)
 
             # linux interfaces
-            with self.cluster("linux net devices"):
-                for iface in r.get("interfaces", D()).values():
-                    self.phy_iface(iface)
-
-            # openvswitch
-            label = [f"<b>OVS {r.ovs.config.ovs_version}</b>"]
-            if r.ovs.config.get("dpdk_initialized"):
-                label.append(r.ovs.config.dpdk_version)
-            with self.cluster(label, color="green"):
+            with self.cluster("networking"):
+                # openvswitch
                 for br in r.get("ovs", D()).get("bridges", D()).values():
                     self.ovs_bridge(br)
                 for port in r.get("ovs", D()).get("ports", D()).values():
-                    if port.type in ("internal", "vxlan"):
+                    if port.type in ("vxlan", "geneve"):
                         continue
+                    if port.type == "internal":
+                        pass
                     if port.type == "patch":
                         self.edge(
-                            f"ovs_br_{safe(port.bridge)}",
-                            f"ovs_br_{safe(r.ovs.ports[port.options.peer].bridge)}",
+                            self.ovs_br_node_id(port.bridge),
+                            self.ovs_br_node_id(r.ovs.ports[port.options.peer].bridge),
                             style="dashed",
-                            color="green",
+                            color="forestgreen",
                         )
                         continue
                     self.ovs_port(port)
                 self.ovs_pmds(r.ovs)
 
+                # linux networking
+                for iface in r.get("interfaces", D()).values():
+                    self.phy_iface(iface, netns="")
+
+                for netns, ifaces in r.netns.items():
+                    with self.cluster(f"netns {netns}", color="salmon", style="dashed"):
+                        for iface in ifaces.values():
+                            self.phy_iface(iface, netns=netns)
+
             # physical CPU/memory
             for numa in r.get("numa", D()).values():
                 with self.cluster(f"phy numa {numa.id}"):
                     self.phy_numa(numa)
+
+    def vm_cpu_node_id(self, vm, numa):
+        return f"{vm.name}_cpu_{numa.id}"
+
+    def vm_memory_node_id(self, vm, numa):
+        return f"{vm.name}_memory_{numa.id}"
 
     def vm_numa(self, vm: D, numa: D):
         labels = [f"<b>vCPUs {bit_list(numa.vcpus)}</b>"]
@@ -153,12 +179,15 @@ class SOSGraph:
             if host_cpus & n.cpus:
                 cpu_numas.add(n.id)
         labels.append(f'<font color="blue">host NUMA {bit_list(cpu_numas)}</font>')
-        self.node(f"{safe(vm.name)}_cpus_{numa.id}", labels, color="blue")
+        self.node(self.vm_cpu_node_id(vm, numa), labels, color="blue")
 
         labels = [f"<b>memory {human_readable(numa.memory, 1024)}</b>"]
         for h in numa.get("host_numa", []):
             labels.append(f'<font color="red">host NUMA {h}</font>')
-        self.node(f"{safe(vm.name)}_memory_{numa.id}", labels, color="red")
+        self.node(self.vm_memory_node_id(vm, numa), labels, color="red")
+
+    def vm_iface_node_id(self, name):
+        return f"vm_iface_{name}"
 
     def vm_iface(self, iface: D) -> str:
         labels = [f"<b>{iface.type}</b>"]
@@ -166,13 +195,13 @@ class SOSGraph:
         peer = None
         if "socket" in iface:
             name = os.path.basename(iface.socket)
-            peer = f"ovs_port_{safe(name)}"
+            peer = self.ovs_port_node_id(name)
         elif "host_dev" in iface:
             name = iface.host_dev
-            peer = f"pci_{safe(name)}"
+            peer = pci_node_id(iface.host_dev)
         elif "net_dev" in iface:
             name = iface.net_dev
-            peer = f"phy_{safe(name)}"
+            peer = self.iface_node_id(name, "")
         if name:
             labels.append(name)
         if "vlan" in iface:
@@ -181,11 +210,19 @@ class SOSGraph:
             labels.append(f"<i>bridge {iface.bridge}</i>")
         if "queues" in iface:
             labels.append(f"<i>queues {iface.queues}</i>")
-        self.node(f"vm_iface_{safe(name)}", labels, color="orange")
+        self.node(self.vm_iface_node_id(name), labels, color="orange")
         if peer:
-            self.edge(f"vm_iface_{safe(name)}", peer, style="dashed", color="orange")
+            self.edge(self.vm_iface_node_id(name), peer, style="dashed", color="orange")
 
-    def phy_iface(self, iface: D):
+    def iface_node_id(self, name, netns):
+        return f"net_{netns}_{name}"
+
+    def phy_iface(self, iface: D, netns: str = ""):
+        if netns == "" and iface.name in self.report.ovs.ports:
+            return
+        if netns == "" and iface.name in self.report.ovs.bridges:
+            return
+
         labels = [f"<b>{iface.name}</b>"]
 
         kind = iface.get("kind")
@@ -200,8 +237,8 @@ class SOSGraph:
         if "device" in iface:
             labels.append(iface.device)
             self.edge(
-                f"phy_{safe(iface.name)}",
-                f"pci_{safe(iface.device)}",
+                self.iface_node_id(iface.name, netns),
+                pci_node_id(iface.device),
                 style="dashed",
                 color="orange",
             )
@@ -215,88 +252,123 @@ class SOSGraph:
         if "mtu" in iface:
             tooltips.append(f"mtu {iface.mtu}")
 
+        color = "salmon" if netns else "hotpink"
         self.node(
-            f"phy_{safe(iface.name)}",
+            self.iface_node_id(iface.name, netns),
             labels,
-            color="green",
+            color=color,
             tooltip=tooltips,
         )
         if "link" in iface:
+            if "link_netns" in iface:
+                link_ns = iface.link_netns
+                if link_ns == "0":
+                    link_ns = ""
+            else:
+                link_ns = netns
+            link = self.find_iface(iface.link, link_ns)
             self.edge(
-                f"phy_{safe(iface.name)}",
-                f"phy_{safe(iface.link)}",
+                self.iface_node_id(iface.name, netns),
+                self.iface_node_id(link.name, link_ns),
                 style="dashed",
-                color="green",
+                color=color,
             )
         if "master" in iface:
             self.edge(
-                f"phy_{safe(iface.master)}",
-                f"phy_{safe(iface.name)}",
+                self.iface_node_id(iface.master, netns),
+                self.iface_node_id(iface.name, netns),
                 style="solid",
-                color="green",
+                color=color,
             )
+
+    def find_iface(self, name, netns):
+        if netns:
+            ifaces = self.report.netns[netns]
+        else:
+            ifaces = self.report.interfaces
+        match = re.match(r"if(\d+)", name)
+        if not match:
+            return ifaces[name]
+        for iface in ifaces.values():
+            if iface.index == match.group(1):
+                return iface
+        raise KeyError(name)
+
+    def ovs_br_node_id(self, name):
+        return f"ovs_br_{name}"
 
     def ovs_bridge(self, br: D):
         labels = [
             f"<b>{br.name}</b>",
-            f"datapath {br.datapath}",
+            f"OVS bridge {br.datapath}",
             f"rules {br.of_rules}",
             f"ports {br.ports}",
         ]
-        self.node(f"ovs_br_{safe(br.name)}", labels, color="green", shape="diamond")
+        if br.name in self.report.interfaces:
+            for ip in self.report.interfaces[br.name].get("ip", []):
+                labels.append(f'<font color="purple">{ip}</font>')
+        self.node(
+            self.ovs_br_node_id(br.name), labels, color="forestgreen", shape="diamond"
+        )
+
+    def ovs_port_node_id(self, name):
+        return f"ovs_port_{name}"
 
     def ovs_port(self, port: D):
         labels = [
             f"<b>{port.name}</b>",
-            f"type {port.type}",
+            f"OVS port {port.type}",
         ]
         if port.type == "dpdk":
             labels.append(f"{port.options.dpdk_devargs}")
             labels.append(f"n_rxq {port.options.get('n_rxq', 1)}")
             self.edge(
-                f"ovs_port_{safe(port.name)}",
-                f"pci_{safe(port.options.dpdk_devargs)}",
+                self.ovs_port_node_id(port.name),
+                pci_node_id(port.options.dpdk_devargs),
                 style="dashed",
                 color="orange",
             )
 
         if "tag" in port:
-            labels.append(f'<font color="green">VLAN {port.tag}</font>')
+            labels.append(f'<font color="forestgreen">VLAN {port.tag}</font>')
+        if port.name in self.report.interfaces:
+            for ip in self.report.interfaces[port.name].get("ip", []):
+                labels.append(f'<font color="purple">{ip}</font>')
 
         self.node(
-            f"ovs_port_{safe(port.name)}",
+            self.ovs_port_node_id(port.name),
             labels,
-            color="green",
+            color="forestgreen",
             shape="ellipse",
         )
-        self.edge(f"ovs_port_{safe(port.name)}", f"ovs_br_{safe(port.bridge)}")
+        self.edge(self.ovs_port_node_id(port.name), self.ovs_br_node_id(port.bridge))
 
         if port.type == "bond":
             for member in port.members.values():
                 labels = [
                     f"<b>{member.name}</b>",
-                    f"type {member.type}",
+                    f"OVS port {member.type}",
                 ]
                 if member.type == "dpdk":
                     labels.append(f"{member.options.dpdk_devargs}")
                     labels.append(f"n_rxq {member.options.get('n_rxq', 1)}")
                     self.edge(
-                        f"ovs_port_{safe(member.name)}",
-                        f"pci_{safe(member.options.dpdk_devargs)}",
+                        self.ovs_port_node_id(member.name),
+                        pci_node_id(member.options.dpdk_devargs),
                         style="dashed",
                         color="orange",
                     )
                 self.node(
-                    f"ovs_port_{safe(member.name)}",
+                    self.ovs_port_node_id(member.name),
                     labels,
-                    color="green",
+                    color="forestgreen",
                     shape="ellipse",
                 )
                 self.edge(
-                    f"ovs_port_{safe(port.name)}",
-                    f"ovs_port_{safe(member.name)}",
+                    self.ovs_port_node_id(port.name),
+                    self.ovs_port_node_id(member.name),
                     style="solid",
-                    color="green",
+                    color="forestgreen",
                 )
 
     BLUES = (
@@ -325,7 +397,7 @@ class SOSGraph:
                 for rxq in pmd.rxqs:
                     self.edge(
                         f"ovs_pmd_{pmd.core}",
-                        f"ovs_port_{safe(rxq.port)}",
+                        self.ovs_port_node_id(rxq.port),
                         force=True,
                         style="bold",
                         color=color,
@@ -378,7 +450,7 @@ class SOSGraph:
                     for vcpu in vnuma.vcpus:
                         host_cpus.update(vm.vcpu_pinning[vcpu])
                     self.node(
-                        f"phy_cpus_{safe(vm.name)}_{numa.id}",
+                        f"phy_cpus_{vm.name}_{numa.id}",
                         [f"<b>VM {vm.name}</b>", f"CPUs {bit_list(host_cpus)}"],
                         tooltip=self.irq_counters_tooltip(host_cpus),
                         color="blue",
@@ -412,7 +484,7 @@ class SOSGraph:
                 if "kernel_driver" in nics[0]:
                     labels.append(nics[0].kernel_driver)
                 self.node(
-                    f"pci_{safe(nics[0].pci_id)}",
+                    pci_node_id(nics[0].pci_id),
                     labels,
                     tooltip=nics[0].device,
                     color="orange",
@@ -426,15 +498,15 @@ class SOSGraph:
                         if "kernel_driver" in nic:
                             labels.append(nic.kernel_driver)
                         self.node(
-                            f"pci_{safe(nic.pci_id)}",
+                            pci_node_id(nic.pci_id),
                             labels,
                             tooltip=nic.device,
                             color="orange",
                         )
 
 
-def safe(n):
-    return re.sub(r"\W", "_", n)
+def pci_node_id(pci_id):
+    return f"pci_{pci_id}"
 
 
 def wrap_text(text: str, margin: int) -> list[str]:
