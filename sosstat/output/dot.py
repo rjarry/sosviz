@@ -133,7 +133,7 @@ class SOSGraph:
                 for br in r.get("ovs", D()).get("bridges", D()).values():
                     self.ovs_bridge(br)
                 for port in r.get("ovs", D()).get("ports", D()).values():
-                    if port.type in ("vxlan", "geneve", "internal"):
+                    if port.type in ("vxlan", "geneve", "internal", ""):
                         continue
                     if port.type == "patch":
                         self.edge(
@@ -220,8 +220,6 @@ class SOSGraph:
         return f"net_{netns}_{name}"
 
     def phy_iface(self, iface: D, netns: str = ""):
-        if netns == "" and iface.name in self.report.ovs.ports:
-            return
         if netns == "" and iface.name in self.report.ovs.bridges:
             return
 
@@ -276,6 +274,14 @@ class SOSGraph:
                 style="solid",
                 color=color,
             )
+        if iface.name in self.report.ovs.ports:
+            port = self.report.ovs.ports[iface.name]
+            self.edge(
+                self.iface_node_id(iface.name, netns),
+                self.ovs_br_node_id(port.bridge),
+                style="solid",
+                color="forestgreen",
+            )
 
     def find_iface(self, name, netns):
         if netns:
@@ -327,6 +333,45 @@ class SOSGraph:
         self.node(
             self.ovs_br_node_id(br.name), labels, color="forestgreen", shape="diamond"
         )
+        vxlan_ports = 0
+        geneve_ports = 0
+        for port in self.report.ovs.ports.values():
+            if port.bridge != br.name:
+                continue
+            if port.type == "vxlan":
+                vxlan_ports += 1
+            if port.type == "geneve":
+                geneve_ports += 1
+        if vxlan_ports > 0:
+            vxlan_stub = self.ovs_br_node_id(br.name) + "_vxlans"
+            self.node(
+                vxlan_stub,
+                f"{vxlan_ports} VXLAN ports",
+                shape="ellipse",
+                color="forestgreen",
+                style="dashed",
+            )
+            self.edge(
+                vxlan_stub,
+                self.ovs_br_node_id(br.name),
+                color="forestgreen",
+                style="solid",
+            )
+        if geneve_ports > 0:
+            geneve_stub = self.ovs_br_node_id(br.name) + "_geneves"
+            self.node(
+                geneve_stub,
+                f"{geneve_ports} GENEVE ports",
+                shape="ellipse",
+                color="forestgreen",
+                style="dashed",
+            )
+            self.edge(
+                geneve_stub,
+                self.ovs_br_node_id(br.name),
+                color="forestgreen",
+                style="solid",
+            )
 
     def ovs_port_node_id(self, name):
         return f"ovs_port_{name}"
