@@ -222,6 +222,8 @@ class SOSGraph:
     def phy_iface(self, iface: D, netns: str = ""):
         if netns == "" and iface.name in self.report.ovs.bridges:
             return
+        if iface.name in "ovs-system" or re.match(r"(genev|vxlan)_sys_\d+", iface.name):
+            return
 
         labels = [f"<b>{iface.name}</b>"]
 
@@ -267,7 +269,7 @@ class SOSGraph:
                 style="dashed",
                 color=color,
             )
-        if "master" in iface:
+        if "master" in iface and iface.master != "ovs-system":
             self.edge(
                 self.iface_node_id(iface.master, netns),
                 self.iface_node_id(iface.name, netns),
