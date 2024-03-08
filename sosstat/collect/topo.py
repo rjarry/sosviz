@@ -50,7 +50,11 @@ def parse_report(path: pathlib.Path, data: D):
             try:
                 threads = parse_cpu_set((cpu / "thread_siblings_list").read_text())
             except FileNotFoundError:
-                threads = parse_cpu_set((cpu / "core_cpus_list").read_text())
+                try:
+                    threads = parse_cpu_set((cpu / "core_cpus_list").read_text())
+                except FileNotFoundError:
+                    # hyperthreading disabled
+                    continue
             cpus.update(threads)
             for t in threads:
                 siblings[t] = threads - {t}
