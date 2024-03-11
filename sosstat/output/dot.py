@@ -304,7 +304,7 @@ class SOSGraph:
     def ovs_bridge(self, br: D):
         labels = [
             f"<b>{br.name}</b>",
-            f"OVS bridge {br.datapath}",
+            f"OVS {br.datapath}",
             f"rules {br.of_rules}",
             f"ports {br.ports}",
         ]
@@ -381,7 +381,7 @@ class SOSGraph:
     def ovs_port(self, port: D):
         labels = [
             f"<b>{port.name}</b>",
-            f"OVS port {port.type}",
+            f"OVS {port.type}",
         ]
         if port.type == "dpdk":
             labels.append(f"{port.options.dpdk_devargs}")
@@ -429,7 +429,6 @@ class SOSGraph:
             self.ovs_port_node_id(port.name),
             labels,
             color="forestgreen",
-            shape="ellipse",
         )
         self.edge(self.ovs_port_node_id(port.name), self.ovs_br_node_id(port.bridge))
 
@@ -437,7 +436,7 @@ class SOSGraph:
             for member in port.members.values():
                 labels = [
                     f"<b>{member.name}</b>",
-                    f"OVS port {member.type}",
+                    f"OVS {member.type}",
                 ]
                 if member.type == "dpdk":
                     labels.append(f"{member.options.dpdk_devargs}")
@@ -446,7 +445,6 @@ class SOSGraph:
                     self.ovs_port_node_id(member.name),
                     labels,
                     color="forestgreen",
-                    shape="ellipse",
                 )
                 self.edge(
                     self.ovs_port_node_id(port.name),
