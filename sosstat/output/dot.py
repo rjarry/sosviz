@@ -386,6 +386,17 @@ class SOSGraph:
         if port.type == "dpdk":
             labels.append(f"{port.options.dpdk_devargs}")
             labels.append(f"n_rxq {port.options.get('n_rxq', 1)}")
+        if port.type == "dpdkvhostuserclient":
+            enabled = 0
+            disabled = 0
+            for pmd in self.report.ovs.pmds.values():
+                for rxq in pmd.rxqs:
+                    if rxq.port == port.name:
+                        if rxq.enabled:
+                            enabled += 1
+                        else:
+                            disabled += 1
+            labels.append(f"n_rxq {enabled or 1} (disabled {disabled})")
 
         if "tag" in port:
             labels.append(f'<font color="forestgreen">VLAN {port.tag}</font>')
@@ -468,6 +479,8 @@ class SOSGraph:
                     color=color,
                 )
                 for rxq in pmd.rxqs:
+                    if not rxq.enabled:
+                        continue
                     self.edge(
                         f"ovs_pmd_{pmd.core}",
                         self.ovs_port_node_id(rxq.port),

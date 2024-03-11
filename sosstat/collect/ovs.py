@@ -31,7 +31,7 @@ RXQ_RE = re.compile(
     r"""
     \s+port:\s+(\S+)
     \s+queue-id:\s+(\d+)
-    (?:\s+\(enabled\))?
+    (?:\s+\((?P<status>enabled|disabled)\))?
     \s+pmd\susage:\s*(\d+)\s*%
     $
     """,
@@ -117,12 +117,13 @@ def ovs_pmds(ovs, path):
                 pmds[core].isolated = match.group(1) == "true"
 
             for match in RXQ_RE.finditer(block):
-                port, rxq, usage = match.groups()
+                port, rxq, status, usage = match.groups()
                 pmds[core].rxqs.append(
                     D(
                         port=strip_quotes(port),
                         rxq=int(rxq),
                         usage=int(usage),
+                        enabled=status in ("enabled", None, ""),
                     )
                 )
 
