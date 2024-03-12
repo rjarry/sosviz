@@ -379,6 +379,14 @@ class SOSGraph:
         return f"ovs_port_{name}"
 
     def ovs_port(self, port: D):
+        if port.name in self.report.interfaces:
+            self.edge(
+                self.iface_node_id(port.name, ""),
+                self.ovs_br_node_id(port.bridge),
+                color="forestgreen",
+            )
+            return
+
         labels = [
             f"<b>{port.name}</b>",
             f"OVS {port.type}",
@@ -430,10 +438,23 @@ class SOSGraph:
             labels,
             color="forestgreen",
         )
-        self.edge(self.ovs_port_node_id(port.name), self.ovs_br_node_id(port.bridge))
+        self.edge(
+            self.ovs_port_node_id(port.name),
+            self.ovs_br_node_id(port.bridge),
+            color="forestgreen",
+        )
 
         if port.type == "bond":
             for member in port.members.values():
+                if member.name in self.report.interfaces:
+                    self.edge(
+                        self.ovs_port_node_id(port.name),
+                        self.iface_node_id(member.name, ""),
+                        style="solid",
+                        color="forestgreen",
+                    )
+                    continue
+
                 labels = [
                     f"<b>{member.name}</b>",
                     f"OVS {member.type}",
