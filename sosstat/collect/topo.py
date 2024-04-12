@@ -25,7 +25,7 @@ def parse_report(path: pathlib.Path, data: D):
             div = 1
             meminfo = (node / "meminfo").read_text()
         except FileNotFoundError:
-            dif = len(nodes)
+            div = len(nodes)
             meminfo = (path / "proc/meminfo").read_text()
 
         match = re.search(r"MemTotal:\s+(\d+)\s*kB", meminfo)

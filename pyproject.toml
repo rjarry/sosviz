@@ -48,6 +48,14 @@ disable = [
 	"locally-disabled",
 	"missing-docstring",
 	"suppressed-message",
+	"too-many-arguments",
+	"too-many-boolean-expressions",
+	"too-many-branches",
+	"too-many-instance-attributes",
+	"too-many-locals",
+	"too-many-public-methods",
+	"too-many-return-statements",
+	"too-many-statements",
 	"unnecessary-pass",
 	"unused-argument",
 	"use-implicit-booleaness-not-comparison-to-string",
@@ -82,15 +90,3 @@ inlinevar-naming-style="any"
 
 [tool.pylint.format]
 expected-line-ending-format="LF"
-
-[tool.pylint.design]
-max-args=7
-max-attributes=10
-max-bool-expr=5
-max-branches=20
-max-locals=16
-max-parents=10
-max-public-methods=20
-max-returns=7
-max-statements=50
-min-public-methods=0

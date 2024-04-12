@@ -144,7 +144,6 @@ class SOSGraph:
                         )
                         continue
                     self.ovs_port(port)
-                self.ovs_pmds(r.ovs)
 
                 # linux networking
                 for iface in r.get("interfaces", D()).values():
@@ -238,6 +237,12 @@ class SOSGraph:
             labels.append(kind)
         if "device" in iface:
             labels.append(iface.device)
+            self.edge(
+                self.iface_node_id(iface.name, netns),
+                pci_node_id(iface.device),
+                style="dashed",
+                color="darkorange",
+            )
 
         for ip in iface.get("ip", []):
             labels.append(f'<font color="purple">{ip}</font>')
@@ -279,8 +284,8 @@ class SOSGraph:
         if iface.name in self.report.ovs.ports:
             port = self.report.ovs.ports[iface.name]
             self.edge(
-                self.iface_node_id(iface.name, netns),
                 self.ovs_br_node_id(port.bridge),
+                self.iface_node_id(iface.name, netns),
                 style="solid",
                 color="forestgreen",
             )
@@ -378,6 +383,31 @@ class SOSGraph:
     def ovs_port_node_id(self, name):
         return f"ovs_port_{name}"
 
+    def ovs_dpdk_labels(self, port: D):
+        if "dpdk_devargs" in port.options:
+            numa_id = "N/A"
+            for numa in self.report.numa.values():
+                if port.options.dpdk_devargs in numa.pci_nics:
+                    numa_id = numa.id
+                    break
+            yield f"{port.options.dpdk_devargs} NUMA {numa_id}"
+
+        disabled = set()
+        rxqs = []
+        for pmd in self.report.ovs.pmds.values():
+            for rxq in pmd.rxqs:
+                if rxq.port == port.name:
+                    if rxq.enabled:
+                        rxqs.append((rxq.rxq, pmd.core, pmd.numa))
+                    else:
+                        disabled.add(rxq.rxq)
+
+        for rxq, core, numa in sorted(rxqs):
+            yield f"rxq {rxq} cpu {core} NUMA {numa}"
+        if disabled:
+            s = "s" if len(disabled) > 1 else ""
+            yield f'<font color="gray">rxq{s} {bit_list(disabled)} disabled</font>'
+
     def ovs_port(self, port: D):
         if port.name in self.report.interfaces:
             self.edge(
@@ -391,20 +421,15 @@ class SOSGraph:
             f"<b>{port.name}</b>",
             f"OVS {port.type}",
         ]
-        if port.type == "dpdk":
-            labels.append(f"{port.options.dpdk_devargs}")
-            labels.append(f"n_rxq {port.options.get('n_rxq', 1)}")
-        if port.type == "dpdkvhostuserclient":
-            enabled = 0
-            disabled = 0
-            for pmd in self.report.ovs.pmds.values():
-                for rxq in pmd.rxqs:
-                    if rxq.port == port.name:
-                        if rxq.enabled:
-                            enabled += 1
-                        else:
-                            disabled += 1
-            labels.append(f"n_rxq {enabled or 1} (disabled {disabled})")
+        if port.type in ("dpdk", "dpdkvhostuserclient"):
+            labels.extend(self.ovs_dpdk_labels(port))
+            if "dpdk_devargs" in port.options:
+                self.edge(
+                    self.ovs_port_node_id(port.name),
+                    pci_node_id(port.options.dpdk_devargs),
+                    style="dashed",
+                    color="darkorange",
+                )
 
         if "tag" in port:
             labels.append(f'<font color="forestgreen">VLAN {port.tag}</font>')
@@ -439,8 +464,8 @@ class SOSGraph:
             color="forestgreen",
         )
         self.edge(
-            self.ovs_port_node_id(port.name),
             self.ovs_br_node_id(port.bridge),
+            self.ovs_port_node_id(port.name),
             color="forestgreen",
         )
 
@@ -460,8 +485,13 @@ class SOSGraph:
                     f"OVS {member.type}",
                 ]
                 if member.type == "dpdk":
-                    labels.append(f"{member.options.dpdk_devargs}")
-                    labels.append(f"n_rxq {member.options.get('n_rxq', 1)}")
+                    labels.extend(self.ovs_dpdk_labels(member))
+                    self.edge(
+                        self.ovs_port_node_id(member.name),
+                        pci_node_id(member.options.dpdk_devargs),
+                        style="dashed",
+                        color="darkorange",
+                    )
                 self.node(
                     self.ovs_port_node_id(member.name),
                     labels,
@@ -474,51 +504,21 @@ class SOSGraph:
                     color="forestgreen",
                 )
 
-    BLUES = (
-        "cornflowerblue",
-        "dodgerblue",
-        "mediumturquoise",
-        "deepskyblue",
-        "steelblue",
-        "navy",
-        "turquoise",
-        "darkslateblue",
-        "darkcyan",
-    )
-
-    def ovs_pmds(self, ovs: D):
-        if not ovs.pmds:
-            return
-        with self.cluster("DPDK PMD cores", style="dotted", color="blue", rank="sink"):
-            for pmd in ovs.pmds.values():
-                color = self.BLUES[pmd.core % len(self.BLUES)]
-                self.node(
-                    f"ovs_pmd_{pmd.core}",
-                    f"<b>Core {pmd.core} NUMA {pmd.numa}</b>",
-                    color=color,
-                )
-                for rxq in pmd.rxqs:
-                    if not rxq.enabled:
-                        continue
-                    self.edge(
-                        f"ovs_pmd_{pmd.core}",
-                        self.ovs_port_node_id(rxq.port),
-                        force=True,
-                        style="bold",
-                        color=color,
-                    )
+    def irq_counters(self, cpu: int) -> tuple[int, int]:
+        counter = 0
+        bound = 0
+        for irq in self.report.irqs.values():
+            if not irq.irq.isdigit():
+                continue
+            if cpu in irq.get("effective_affinity", []):
+                bound += 1
+            counter += irq.counters[cpu]
+        return counter, bound
 
     def irq_counters_tooltip(self, cpus: set[int]) -> str:
         tooltip = []
         for c in cpus:
-            counter = 0
-            bound = 0
-            for irq in self.report.irqs.values():
-                if not irq.irq.isdigit():
-                    continue
-                if c in irq.get("effective_affinity", []):
-                    bound += 1
-                counter += irq.counters[c]
+            counter, bound = self.irq_counters(c)
             if counter < 42:  # XXX: how about 1337 maybe?
                 continue
             counter = human_readable(counter)
@@ -533,19 +533,35 @@ class SOSGraph:
         with self.cluster(model, style="dotted", color="blue"):
             housekeeping_cpus = set(numa.cpus)
 
-            ovs_cpus = set()
+            ovs_pmds = {}
             for pmd in self.report.ovs.pmds.values():
                 if pmd.numa != numa.id:
                     continue
-                ovs_cpus.add(pmd.core)
-            if ovs_cpus:
+                p = ovs_pmds.setdefault(
+                    pmd.core,
+                    D(cpu=pmd.core, isolated=pmd.isolated, rxqs=0, usage=0),
+                )
+                for rxq in pmd.rxqs:
+                    if rxq.enabled:
+                        p.rxqs += 1
+                        p.usage += rxq.usage
+
+            if ovs_pmds:
+                labels = ["<b>OVS DPDK</b>"]
+                for pmd in ovs_pmds.values():
+                    irqs, _ = self.irq_counters(pmd.cpu)
+                    labels.append(
+                        f"CPU {pmd.cpu} rxqs={pmd.rxqs} usage={pmd.usage}% irqs={human_readable(irqs)}"
+                    )
+
                 self.node(
                     f"phy_cpus_ovs_{numa.id}",
-                    ["<b>OVS DPDK</b>", f"CPUs {bit_list(ovs_cpus)}"],
-                    tooltip=self.irq_counters_tooltip(ovs_cpus),
+                    labels,
+                    tooltip=self.irq_counters_tooltip(ovs_pmds.keys()),
                     color="blue",
                 )
-            housekeeping_cpus -= ovs_cpus
+
+            housekeeping_cpus -= ovs_pmds.keys()
 
             for vm in self.report.get("vms", {}).values():
                 for vnuma in vm.numa.values():
