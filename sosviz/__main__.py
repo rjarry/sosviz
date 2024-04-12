@@ -2,7 +2,8 @@
 # Copyright (c) 2024 Robin Jarry
 
 """
-Collect information from an sosreport and export it in other formats.
+Collect information from an sos report folder and export it in other formats
+on standard output.
 """
 
 import argparse
@@ -14,20 +15,20 @@ from . import collect, output
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, prog="sosstat")
+    parser = argparse.ArgumentParser(description=__doc__, prog="sosviz")
     parser.add_argument(
         "path",
         metavar="PATH",
         type=pathlib.Path,
         help="""
-        Path to an uncompressed sosreport folder.
+        Path to an uncompressed sos report folder.
         """,
     )
     parser.add_argument(
         "-V",
         "--version",
         action="version",
-        version=f"%(prog)s {metadata.version('sosstat')}",
+        version=f"%(prog)s {metadata.version('sosviz')}",
         help="""
         Show version and exit.
         """,

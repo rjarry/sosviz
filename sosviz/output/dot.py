@@ -21,7 +21,7 @@ class SOSGraph:
 
     def __init__(self, report: D):
         self.dot = graphviz.Graph(
-            name="sosstat",
+            name="sosviz",
             node_attr={
                 "fontsize": "11",
                 "fontname": "monospace",

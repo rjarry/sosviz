@@ -1,37 +1,47 @@
-# sosstat
+# sosviz
 
-Tool to extract statistics and sizing information from sos reports and database
-dumps.
+Extract information from [`sos`](https://github.com/sosreport/sos) reports and
+export it in other formats.
 
 ## Installation
 
 ```
-pip install --user sosstat
+pip install --user sosviz
 ```
 
 ## Usage
 
 ```
-usage: sosstat [-h] [-d] [-f {dot,text,json}] PATH
+usage: sosviz [-h] [-V] [-d] [-f {dot,text,json,svg}] PATH
 
-Collect information from an sosreport and export it in other formats.
+Collect information from an sos report folder and export it in other formats
+on standard output.
 
 positional arguments:
-  PATH                  Path to an uncompressed sosreport folder.
+  PATH                  Path to an uncompressed sos report folder.
 
 options:
   -h, --help            show this help message and exit
+  -V, --version         Show version and exit.
   -d, --debug           Show debug info.
-  -f {dot,text,json}, --format {dot,text,json}
-                        Output format (default: text).
+  -f {dot,text,json,svg}, --format {dot,text,json,svg}
+                        Output format (default: svg).
 ```
 
-## Generate Visual Representation
+## Examples
 
 ```
-sosstat -f dot ~/tmp/sosreport | dot -Tsvg > sosreport.svg
+sosviz ~/tmp/sosreport > example.svg
 ```
 
-Example:
+```
+sosviz -f dot ~/tmp/sosreport | dot -Tpng > example.png
+```
 
-![docs/example.png](https://gitlab.cee.redhat.com/rjarry/sosstat/-/raw/main/docs/example.png)
+```
+sosviz --debug -f json ~/tmp/sosreport | jq -C | less -R
+```
+
+## Example SVG output
+
+![example.svg](https://raw.githubusercontent.com/rjarry/sosviz/main/example.svg)

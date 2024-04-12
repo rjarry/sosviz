@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2024 Robin Jarry
 
-from . import dot, json, text
+from . import dot, json, svg, text
 
 
-FORMATS = {"dot": dot, "text": text, "json": json}
-DEFAULT_FORMAT = "text"
+FORMATS = {"dot": dot, "text": text, "json": json, "svg": svg}
+DEFAULT_FORMAT = "svg"
 
 
 def render(report, fmt: str = DEFAULT_FORMAT, **opts):
