@@ -9,6 +9,9 @@ export it in other formats.
 pip install --user sosviz
 ```
 
+System dependency to [`dot`](https://command-not-found.com/dot) from the
+[`graphviz`](https://graphviz.org/) package.
+
 ## Usage
 
 ```
@@ -28,7 +31,7 @@ options:
                         Output format (default: svg).
 ```
 
-## Examples
+Examples:
 
 ```
 sosviz ~/tmp/sosreport > example.svg
