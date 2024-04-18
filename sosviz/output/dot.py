@@ -220,6 +220,18 @@ class SOSGraph:
     def iface_node_id(self, name, netns):
         return f"net_{netns}_{name}"
 
+    NETDEV_ERRORS = {
+        "rx_dropped",
+        "rx_errors",
+        "rx_fifo",
+        "rx_frame",
+        "tx_carrier",
+        "tx_colls",
+        "tx_dropped",
+        "tx_errors",
+        "tx_fifo",
+    }
+
     def phy_iface(self, iface: D, netns: str = ""):
         if netns == "" and iface.name in self.report.ovs.bridges:
             return
@@ -254,6 +266,24 @@ class SOSGraph:
             tooltips.append(f"mac {iface.mac}")
         if "mtu" in iface:
             tooltips.append(f"mtu {iface.mtu}")
+
+        state = []
+        if "DOWN" in iface["flags"]:
+            state.append('<font color="darkorange">DOWN</font>')
+        else:
+            state.append('<font color="forestgreen">UP</font>')
+        if "NO-CARRIER" in iface["flags"]:
+            state.append('<font color="red">NO-CARRIER</font>')
+        elif "LOWER_UP" in iface["flags"]:
+            state.append('<font color="forestgreen">LOWER_UP</font>')
+        labels.append(f"state {','.join(state)}")
+
+        for name, value in iface.get("stats", {}).items():
+            tooltips.append(f"{name} {human_readable(value)}")
+            if "RUNNING" in iface["flags"] and name in self.NETDEV_ERRORS:
+                labels.append(
+                    f'<font color="red">{name} {human_readable(value)}</font>'
+                )
 
         color = "salmon" if netns else "hotpink"
         self.node(
@@ -385,6 +415,25 @@ class SOSGraph:
     def ovs_port_node_id(self, name):
         return f"ovs_port_{name}"
 
+    def ovs_port_state(self, state: str) -> str:
+        if state == "up":
+            return '<font color="forestgreen">up</font>'
+        return '<font color="red">DOWN</font>'
+
+    def ovs_base_labels(self, port: D):
+        labels = [
+            f"<b>{port.name}</b>",
+            f"OVS {port.type}",
+        ]
+        if "admin_state" in port and "link_state" in port:
+            state = ",".join(
+                self.ovs_port_state(s) for s in (port.admin_state, port.link_state)
+            )
+            labels.append(f"state {state}")
+        if "tag" in port:
+            labels.append(f'<font color="forestgreen">VLAN {port.tag}</font>')
+        return labels
+
     def ovs_dpdk_labels(self, port: D):
         if "dpdk_devargs" in port.options:
             numa_id = "N/A"
@@ -410,6 +459,34 @@ class SOSGraph:
             s = "s" if len(disabled) > 1 else ""
             yield f'<font color="gray">rxq{s} {bit_list(disabled)} disabled</font>'
 
+    OVS_ERRORS = {
+        "collisions",
+        "ovs_rx_qos_drops",
+        "ovs_tx_failure_drops",
+        "ovs_tx_invalid_hwol_drops",
+        "ovs_tx_mtu_exceeded_drops",
+        "ovs_tx_qos_drops",
+        "rx_crc_err",
+        "rx_dropped",
+        "rx_errors",
+        "rx_frame_err",
+        "rx_missed_errors",
+        "rx_over_err",
+        "tx_dropped",
+        "tx_errors",
+    }
+
+    def ovs_stats_labels(self, port: D):
+        for name, value in port.get("stats", {}).items():
+            if value and port.get("admin_state") == "up" and name in self.OVS_ERRORS:
+                yield f'<font color="red">{name} {human_readable(value)}</font>'
+
+    def ovs_stats_tooltip(self, port: D):
+        tip = []
+        for name, value in port.get("stats", {}).items():
+            tip.append(f"{name} {human_readable(value)}")
+        return tip
+
     def ovs_port(self, port: D):
         if port.name in self.report.interfaces:
             self.edge(
@@ -419,10 +496,7 @@ class SOSGraph:
             )
             return
 
-        labels = [
-            f"<b>{port.name}</b>",
-            f"OVS {port.type}",
-        ]
+        labels = self.ovs_base_labels(port)
         if port.type in ("dpdk", "dpdkvhostuserclient"):
             labels.extend(self.ovs_dpdk_labels(port))
             if "dpdk_devargs" in port.options:
@@ -433,8 +507,6 @@ class SOSGraph:
                     color="darkorange",
                 )
 
-        if "tag" in port:
-            labels.append(f'<font color="forestgreen">VLAN {port.tag}</font>')
         iface = self.report.interfaces.get(port.name, None)
         if iface is not None:
             for ip in self.report.interfaces[port.name].get("ip", []):
@@ -459,10 +531,12 @@ class SOSGraph:
                     style="solid",
                     color="forestgreen",
                 )
+        labels.extend(self.ovs_stats_labels(port))
 
         self.node(
             self.ovs_port_node_id(port.name),
             labels,
+            tooltip=self.ovs_stats_tooltip(port),
             color="forestgreen",
         )
         self.edge(
@@ -482,10 +556,7 @@ class SOSGraph:
                     )
                     continue
 
-                labels = [
-                    f"<b>{member.name}</b>",
-                    f"OVS {member.type}",
-                ]
+                labels = self.ovs_base_labels(member)
                 if member.type == "dpdk":
                     labels.extend(self.ovs_dpdk_labels(member))
                     self.edge(
@@ -494,9 +565,11 @@ class SOSGraph:
                         style="dashed",
                         color="darkorange",
                     )
+                labels.extend(self.ovs_stats_labels(member))
                 self.node(
                     self.ovs_port_node_id(member.name),
                     labels,
+                    tooltip=self.ovs_stats_tooltip(member),
                     color="forestgreen",
                 )
                 self.edge(

@@ -53,23 +53,24 @@ IFACE_BLOCK_RE = re.compile(r"^\d+:\s.*\n(\s{4}.+\n)+", re.VERBOSE | re.MULTILIN
 
 
 def parse_report(path: pathlib.Path, data: D):
+    stats = get_netdev_stats(path)
     data.interfaces = parse_interfaces(
-        path / "sos_commands/networking/ip_-d_address", path
+        path / "sos_commands/networking/ip_-d_address", path, stats
     )
     data.netns = D()
     for ip_addr in path.glob(
         "sos_commands/networking/namespaces/*/*_ip_-d_address_show"
     ):
         netns = re.sub(r"ip_netns_exec_(.*)_ip_-d_address_show", r"\1", ip_addr.name)
-        data.netns[ip_addr.parent.name] = parse_interfaces(ip_addr, path)
+        data.netns[ip_addr.parent.name] = parse_interfaces(ip_addr, path, D())
     for ip_addr in path.glob(
         "sos_commands/networking/ip_netns_exec_*_ip*_address_show"
     ):
         netns = re.sub(r"ip_netns_exec_(.*)_ip.*_address_show", r"\1", ip_addr.name)
-        data.netns[netns] = parse_interfaces(ip_addr, path)
+        data.netns[netns] = parse_interfaces(ip_addr, path, D())
 
 
-def parse_interfaces(ip_addr: pathlib.Path, path: pathlib.Path) -> D:
+def parse_interfaces(ip_addr: pathlib.Path, path: pathlib.Path, stats: D) -> D:
     ifaces = D()
     if not ip_addr.is_file():
         return ifaces
@@ -83,4 +84,48 @@ def parse_interfaces(ip_addr: pathlib.Path, path: pathlib.Path) -> D:
         ifaces[d.name] = d
         for m in ADDR_RE.finditer(block.group()):
             d.setdefault("ip", []).append(m.group("addr"))
+        if d.name in stats:
+            d.stats = stats[d.name]
     return ifaces
+
+
+STATS_RE = re.compile(
+    r"""
+    ^
+    \s*
+    (?P<name>[^:]+):\s+
+    (?P<rx_bytes>\d+)\s+
+    (?P<rx_packets>\d+)\s+
+    (?P<rx_errors>\d+)\s+
+    (?P<rx_dropped>\d+)\s+
+    (?P<rx_fifo>\d+)\s+
+    (?P<rx_frame>\d+)\s+
+    (?P<rx_compressed>\d+)\s+
+    (?P<rx_multicast>\d+)\s+
+    (?P<tx_bytes>\d+)\s+
+    (?P<tx_packets>\d+)\s+
+    (?P<tx_errors>\d+)\s+
+    (?P<tx_dropped>\d+)\s+
+    (?P<tx_fifo>\d+)\s+
+    (?P<tx_colls>\d+)\s+
+    (?P<tx_carrier>\d+)\s+
+    (?P<tx_compressed>\d+)
+    \s*
+    $
+    """,
+    re.VERBOSE | re.MULTILINE,
+)
+
+
+def get_netdev_stats(path: pathlib.Path) -> D:
+    stats = D()
+    dev = path / "proc/net/dev"
+    if not dev.is_file():
+        return stats
+
+    for match in STATS_RE.finditer(dev.read_text()):
+        dic = match.groupdict()
+        name = dic.pop("name")
+        stats[name] = D({k: int(v) for k, v in dic.items()})
+
+    return stats

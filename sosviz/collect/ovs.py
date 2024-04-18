@@ -75,7 +75,7 @@ def ovs_ports(ovs, path):
                 if not ifaces:
                     continue
                 port_name = strip_quotes(match.group("name"))
-                port = D(name=port_name, bridge=br_name)
+                port = D(name=port_name, bridge=br_name, stats=D())
                 if len(ifaces) == 1 and port_name in ifaces:
                     port.update(ifaces[port_name])
                 else:
@@ -89,6 +89,23 @@ def ovs_ports(ovs, path):
                     br_name, D(name=br_name, ports=0, of_rules=0)
                 ).ports += 1
                 bridges[br_name].datapath = datapath
+
+    for f in path.glob("sos_commands/openvswitch/ovs-vsctl*_list_interface"):
+        for block in f.read_text().split("\n\n"):
+            d = {}
+            ovs_to_dict(block, d)
+            if d.get("name") in ovs.ports:
+                p = ovs.ports[d["name"]]
+            else:
+                for port in ovs.ports.values():
+                    if "members" in port and d["name"] in port.members:
+                        p = port.members[d["name"]]
+                        break
+                else:
+                    continue
+            p.admin_state = d.get("admin_state", "?")
+            p.link_state = d.get("link_state", "?")
+            p.stats = D(d.get("statistics", {}))
 
     for name, br in bridges.items():
         for f in path.glob(f"sos_commands/openvswitch/ovs-ofctl*_dump-flows_{name}"):
