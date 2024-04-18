@@ -38,6 +38,16 @@ def vm_cpu(vm, xml):
             mem_access=numa.get("memAccess"),
             vcpus=parse_cpu_set(numa.get("cpus", str(numa_id))),
         )
+    if "numa" not in vm:
+        memory = xml.find("./memory")
+        vcpu = xml.find("./vcpu")
+        vm.numa = D()
+        vm.numa[0] = D(
+            id=0,
+            memory=int(memory.text) * multiplier(memory.get("unit")),
+            vcpus=set(range(int(vcpu.text))),
+            host_numa=set(),
+        )
 
     for vcpupin in xml.findall("./cputune/vcpupin"):
         vcpu = int(vcpupin.get("vcpu"))
