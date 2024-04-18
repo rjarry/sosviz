@@ -57,8 +57,16 @@ def parse_report(path: pathlib.Path, data: D):
         path / "sos_commands/networking/ip_-d_address", path
     )
     data.netns = D()
-    for netns in path.glob("sos_commands/networking/namespaces/*/*_ip_-d_address_show"):
-        data.netns[netns.parent.name] = parse_interfaces(netns, path)
+    for ip_addr in path.glob(
+        "sos_commands/networking/namespaces/*/*_ip_-d_address_show"
+    ):
+        netns = re.sub(r"ip_netns_exec_(.*)_ip_-d_address_show", r"\1", ip_addr.name)
+        data.netns[ip_addr.parent.name] = parse_interfaces(ip_addr, path)
+    for ip_addr in path.glob(
+        "sos_commands/networking/ip_netns_exec_*_ip*_address_show"
+    ):
+        netns = re.sub(r"ip_netns_exec_(.*)_ip.*_address_show", r"\1", ip_addr.name)
+        data.netns[netns] = parse_interfaces(ip_addr, path)
 
 
 def parse_interfaces(ip_addr: pathlib.Path, path: pathlib.Path) -> D:
