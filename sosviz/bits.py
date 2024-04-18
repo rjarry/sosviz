@@ -68,7 +68,7 @@ def bit_list(bit_ids: typing.Set[int]) -> str:
 
 
 def human_readable(value: float, order: int = 1000) -> str:
-    units = ("K", "M", "G")
+    units = ("K", "M", "G", "T", "P")
     i = 0
     unit = ""
     while value >= order and i < len(units):
@@ -77,6 +77,8 @@ def human_readable(value: float, order: int = 1000) -> str:
         i += 1
     if unit == "":
         return str(value)
+    if order == 1024:
+        unit += "i"
     if value < 100 and value % 1 > 0:
         return f"{value:.1f}{unit}"
     return f"{value:.0f}{unit}"
