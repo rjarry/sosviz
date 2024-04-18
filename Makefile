@@ -37,3 +37,14 @@ format: $(VENV)/.stamp
 	@$(in_venv) $(PYTHON) -m isort -j$(J) $(PY_FILES)
 	@echo "[black]"
 	@$(in_venv) $(PYTHON) -m black -q $(PY_FILES)
+
+.PHONY: tag-release
+tag-release:
+	@cur_version=`sed -En 's/^version = "(.*)"$$/\1/p' pyproject.toml` && \
+	next_version=`echo $$cur_version | awk -F. -v OFS=. '{$$(NF) += 1; print}'` && \
+	read -rp "next version ($$next_version)? " n && \
+	if [ -n "$$n" ]; then next_version="$$n"; fi && \
+	set -xe && \
+	sed -i "s/^version = \"$$cur_version\"$$/version = \"$$next_version\"/" pyproject.toml && \
+	git commit -sm "release v$$next_version" pyproject.toml && \
+	git tag -sm "v$$next_version" "v$$next_version"
