@@ -169,8 +169,9 @@ class SOSGraph:
         labels = [f"<b>vCPUs {bit_list(numa.vcpus)}</b>"]
         host_cpus = set()
         for vcpu in numa.vcpus:
-            host_cpus.update(vm.vcpu_pinning[vcpu])
-        labels.append(f"host CPUs {bit_list(host_cpus)}")
+            host_cpus.update(vm.vcpu_pinning.get(vcpu, set()))
+        if host_cpus:
+            labels.append(f"host CPUs {bit_list(host_cpus)}")
         cpu_numas = set()
         for n in self.report.numa.values():
             if host_cpus & n.cpus:
