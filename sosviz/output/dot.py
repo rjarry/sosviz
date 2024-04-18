@@ -280,7 +280,7 @@ class SOSGraph:
 
         for name, value in iface.get("stats", {}).items():
             tooltips.append(f"{name} {human_readable(value)}")
-            if "RUNNING" in iface["flags"] and name in self.NETDEV_ERRORS:
+            if value and "LOWER_UP" in iface["flags"] and name in self.NETDEV_ERRORS:
                 labels.append(
                     f'<font color="red">{name} {human_readable(value)}</font>'
                 )
