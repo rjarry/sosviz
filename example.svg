@@ -40,7 +40,7 @@
 <text text-anchor="middle" x="858.92" y="-861.25" font-family="monospace" font-size="11.00">phy numa 0</text>
 </g>
 <g id="clust12" class="cluster">
-<title>_b_Intel_R__Xeon_R__Gold_6240R_CPU___2_40GHz__b_4e1e3b88b60bcbe1</title>
+<title>_b_Intel_R__Xeon_R__Gold_6240R_CPU___2_40GHz__b_8f293ebe99d0b7af</title>
 <polygon fill="none" stroke="blue" stroke-dasharray="1,5" points="712.95,-637.7 712.95,-845.7 1004.9,-845.7 1004.9,-637.7 712.95,-637.7"/>
 <text text-anchor="start" x="720.55" y="-832.25" font-family="monospace" font-weight="bold" font-size="11.00">Intel(R) Xeon(R) Gold 6240R CPU @ 2.40GHz</text>
 </g>
@@ -90,7 +90,7 @@
 <!-- ovs_port_vhua3e08313_f8 -->
 <g id="node2" class="node">
 <title>ovs_port_vhua3e08313_f8</title>
-<g id="a_node2"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 562K&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 4.2K&#10;rx_1024_to_1522_packets 11.1G&#10;rx_128_to_255_packets 69.6G&#10;rx_1523_to_max_packets 10.1G&#10;rx_1_to_64_packets 719M&#10;rx_256_to_511_packets 18.1G&#10;rx_512_to_1023_packets 23.9G&#10;rx_65_to_127_packets 134G&#10;rx_bytes 98682G&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 268G&#10;tx_bytes 89389G&#10;tx_dropped 563K&#10;tx_packets 251G">
+<g id="a_node2"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 562K&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 4.2K&#10;rx_1024_to_1522_packets 11.1G&#10;rx_128_to_255_packets 69.6G&#10;rx_1523_to_max_packets 10.1G&#10;rx_1_to_64_packets 719M&#10;rx_256_to_511_packets 18.1G&#10;rx_512_to_1023_packets 23.9G&#10;rx_65_to_127_packets 134G&#10;rx_bytes 98.7T&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 268G&#10;tx_bytes 89.4T&#10;tx_dropped 563K&#10;tx_packets 251G">
 <polygon fill="none" stroke="forestgreen" points="650.17,-1816.8 474.22,-1816.8 474.22,-1688.6 650.17,-1688.6 650.17,-1816.8"/>
 <text text-anchor="start" x="514.95" y="-1803.75" font-family="monospace" font-weight="bold" font-size="11.00">vhua3e08313&#45;f8</text>
 <text text-anchor="start" x="484.57" y="-1792.75" font-family="monospace" font-size="11.00">OVS dpdkvhostuserclient</text>
@@ -125,7 +125,7 @@
 <!-- ovs_port_vhud023dc51_7b -->
 <g id="node4" class="node">
 <title>ovs_port_vhud023dc51_7b</title>
-<g id="a_node4"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 29&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 0&#10;rx_1024_to_1522_packets 4.8G&#10;rx_128_to_255_packets 21.7G&#10;rx_1523_to_max_packets 11.7K&#10;rx_1_to_64_packets 931M&#10;rx_256_to_511_packets 1.1G&#10;rx_512_to_1023_packets 912M&#10;rx_65_to_127_packets 37.4G&#10;rx_bytes 14589G&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 66.8G&#10;tx_bytes 9823G&#10;tx_dropped 879&#10;tx_packets 71.4G">
+<g id="a_node4"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 29&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 0&#10;rx_1024_to_1522_packets 4.8G&#10;rx_128_to_255_packets 21.7G&#10;rx_1523_to_max_packets 11.7K&#10;rx_1_to_64_packets 931M&#10;rx_256_to_511_packets 1.1G&#10;rx_512_to_1023_packets 912M&#10;rx_65_to_127_packets 37.4G&#10;rx_bytes 14.6T&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 66.8G&#10;tx_bytes 9.8T&#10;tx_dropped 879&#10;tx_packets 71.4G">
 <polygon fill="none" stroke="forestgreen" points="939.65,-1325.3 777.2,-1325.3 777.2,-1208.1 939.65,-1208.1 939.65,-1325.3"/>
 <text text-anchor="start" x="811.17" y="-1312.25" font-family="monospace" font-weight="bold" font-size="11.00">vhud023dc51&#45;7b</text>
 <text text-anchor="start" x="780.8" y="-1301.25" font-family="monospace" font-size="11.00">OVS dpdkvhostuserclient</text>
@@ -159,7 +159,7 @@
 <!-- ovs_port_vhu6559eefe_31 -->
 <g id="node6" class="node">
 <title>ovs_port_vhu6559eefe_31</title>
-<g id="a_node6"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 6&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 0&#10;rx_1024_to_1522_packets 904M&#10;rx_128_to_255_packets 114G&#10;rx_1523_to_max_packets 0&#10;rx_1_to_64_packets 3.7M&#10;rx_256_to_511_packets 2.4G&#10;rx_512_to_1023_packets 249M&#10;rx_65_to_127_packets 387M&#10;rx_bytes 22326G&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 118G&#10;tx_bytes 236G&#10;tx_dropped 126&#10;tx_packets 4.1G">
+<g id="a_node6"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 6&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 0&#10;rx_1024_to_1522_packets 904M&#10;rx_128_to_255_packets 114G&#10;rx_1523_to_max_packets 0&#10;rx_1_to_64_packets 3.7M&#10;rx_256_to_511_packets 2.4G&#10;rx_512_to_1023_packets 249M&#10;rx_65_to_127_packets 387M&#10;rx_bytes 22.3T&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 118G&#10;tx_bytes 236G&#10;tx_dropped 126&#10;tx_packets 4.1G">
 <polygon fill="none" stroke="forestgreen" points="939.65,-1525.3 777.2,-1525.3 777.2,-1408.1 939.65,-1408.1 939.65,-1525.3"/>
 <text text-anchor="start" x="811.17" y="-1512.25" font-family="monospace" font-weight="bold" font-size="11.00">vhu6559eefe&#45;31</text>
 <text text-anchor="start" x="780.8" y="-1501.25" font-family="monospace" font-size="11.00">OVS dpdkvhostuserclient</text>
@@ -225,7 +225,7 @@
 <!-- ovs_port_vhu4e5d15d6_58 -->
 <g id="node10" class="node">
 <title>ovs_port_vhu4e5d15d6_58</title>
-<g id="a_node10"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 5&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 0&#10;rx_1024_to_1522_packets 49.8M&#10;rx_128_to_255_packets 17.6G&#10;rx_1523_to_max_packets 24.0M&#10;rx_1_to_64_packets 162K&#10;rx_256_to_511_packets 548M&#10;rx_512_to_1023_packets 212M&#10;rx_65_to_127_packets 684M&#10;rx_bytes 3403G&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 19.2G&#10;tx_bytes 2827G&#10;tx_dropped 122&#10;tx_packets 18.5G">
+<g id="a_node10"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 5&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;ovs_tx_retries 0&#10;rx_1024_to_1522_packets 49.8M&#10;rx_128_to_255_packets 17.6G&#10;rx_1523_to_max_packets 24.0M&#10;rx_1_to_64_packets 162K&#10;rx_256_to_511_packets 548M&#10;rx_512_to_1023_packets 212M&#10;rx_65_to_127_packets 684M&#10;rx_bytes 3.4T&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_packets 19.2G&#10;tx_bytes 2.8T&#10;tx_dropped 122&#10;tx_packets 18.5G">
 <polygon fill="none" stroke="forestgreen" points="939.65,-1764.3 777.2,-1764.3 777.2,-1647.1 939.65,-1647.1 939.65,-1764.3"/>
 <text text-anchor="start" x="811.17" y="-1751.25" font-family="monospace" font-weight="bold" font-size="11.00">vhu4e5d15d6&#45;58</text>
 <text text-anchor="start" x="780.8" y="-1740.25" font-family="monospace" font-size="11.00">OVS dpdkvhostuserclient</text>
@@ -407,7 +407,7 @@
 <!-- ovs_port_dpdk1 -->
 <g id="node21" class="node">
 <title>ovs_port_dpdk1</title>
-<g id="a_node21"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 0&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;rx_broadcast_packets 444M&#10;rx_bytes 60975G&#10;rx_dropped 9.5K&#10;rx_errors 0&#10;rx_mbuf_allocation_errors 0&#10;rx_missed_errors 9.5K&#10;rx_packets 159G&#10;rx_phy_crc_errors 0&#10;rx_phy_in_range_len_errors 0&#10;rx_phy_symbol_errors 0&#10;rx_q0_errors 0&#10;rx_q1_errors 0&#10;rx_q2_errors 0&#10;rx_q3_errors 0&#10;rx_wqe_errors 0&#10;tx_broadcast_packets 48.1K&#10;tx_bytes 113159G&#10;tx_dropped 0&#10;tx_errors 0&#10;tx_multicast_packets 5.6M&#10;tx_packets 268G&#10;tx_phy_errors 0&#10;tx_pp_clock_queue_errors 0&#10;tx_pp_missed_interrupt_errors 0&#10;tx_pp_rearm_queue_errors 0&#10;tx_pp_timestamp_future_errors 0&#10;tx_pp_timestamp_past_errors 0">
+<g id="a_node21"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 0&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;rx_broadcast_packets 444M&#10;rx_bytes 61.0T&#10;rx_dropped 9.5K&#10;rx_errors 0&#10;rx_mbuf_allocation_errors 0&#10;rx_missed_errors 9.5K&#10;rx_packets 159G&#10;rx_phy_crc_errors 0&#10;rx_phy_in_range_len_errors 0&#10;rx_phy_symbol_errors 0&#10;rx_q0_errors 0&#10;rx_q1_errors 0&#10;rx_q2_errors 0&#10;rx_q3_errors 0&#10;rx_wqe_errors 0&#10;tx_broadcast_packets 48.1K&#10;tx_bytes 113T&#10;tx_dropped 0&#10;tx_errors 0&#10;tx_multicast_packets 5.6M&#10;tx_packets 268G&#10;tx_phy_errors 0&#10;tx_pp_clock_queue_errors 0&#10;tx_pp_missed_interrupt_errors 0&#10;tx_pp_rearm_queue_errors 0&#10;tx_pp_timestamp_future_errors 0&#10;tx_pp_timestamp_past_errors 0">
 <polygon fill="none" stroke="forestgreen" points="1189.85,-1122.3 1040.9,-1122.3 1040.9,-1005.1 1189.85,-1005.1 1189.85,-1122.3"/>
 <text text-anchor="start" x="1098.5" y="-1109.25" font-family="monospace" font-weight="bold" font-size="11.00">dpdk1</text>
 <text text-anchor="start" x="1088.38" y="-1098.25" font-family="monospace" font-size="11.00">OVS dpdk</text>
@@ -433,7 +433,7 @@
 <!-- ovs_port_dpdk0 -->
 <g id="node23" class="node">
 <title>ovs_port_dpdk0</title>
-<g id="a_node23"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 0&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;rx_broadcast_packets 430M&#10;rx_bytes 56499G&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_mbuf_allocation_errors 0&#10;rx_missed_errors 0&#10;rx_packets 187G&#10;rx_phy_crc_errors 0&#10;rx_phy_in_range_len_errors 0&#10;rx_phy_symbol_errors 0&#10;rx_q0_errors 0&#10;rx_q1_errors 0&#10;rx_q2_errors 0&#10;rx_q3_errors 0&#10;rx_wqe_errors 0&#10;tx_broadcast_packets 1.3M&#10;tx_bytes 40867G&#10;tx_dropped 0&#10;tx_errors 0&#10;tx_multicast_packets 5.6M&#10;tx_packets 204G&#10;tx_phy_errors 0&#10;tx_pp_clock_queue_errors 0&#10;tx_pp_missed_interrupt_errors 0&#10;tx_pp_rearm_queue_errors 0&#10;tx_pp_timestamp_future_errors 0&#10;tx_pp_timestamp_past_errors 0">
+<g id="a_node23"><a xlink:title="ovs_rx_qos_drops 0&#10;ovs_tx_failure_drops 0&#10;ovs_tx_invalid_hwol_drops 0&#10;ovs_tx_mtu_exceeded_drops 0&#10;ovs_tx_qos_drops 0&#10;rx_broadcast_packets 430M&#10;rx_bytes 56.5T&#10;rx_dropped 0&#10;rx_errors 0&#10;rx_mbuf_allocation_errors 0&#10;rx_missed_errors 0&#10;rx_packets 187G&#10;rx_phy_crc_errors 0&#10;rx_phy_in_range_len_errors 0&#10;rx_phy_symbol_errors 0&#10;rx_q0_errors 0&#10;rx_q1_errors 0&#10;rx_q2_errors 0&#10;rx_q3_errors 0&#10;rx_wqe_errors 0&#10;tx_broadcast_packets 1.3M&#10;tx_bytes 40.9T&#10;tx_dropped 0&#10;tx_errors 0&#10;tx_multicast_packets 5.6M&#10;tx_packets 204G&#10;tx_phy_errors 0&#10;tx_pp_clock_queue_errors 0&#10;tx_pp_missed_interrupt_errors 0&#10;tx_pp_rearm_queue_errors 0&#10;tx_pp_timestamp_future_errors 0&#10;tx_pp_timestamp_past_errors 0">
 <polygon fill="none" stroke="forestgreen" points="1183.1,-987.3 1047.65,-987.3 1047.65,-892.1 1183.1,-892.1 1183.1,-987.3"/>
 <text text-anchor="start" x="1098.5" y="-974.25" font-family="monospace" font-weight="bold" font-size="11.00">dpdk0</text>
 <text text-anchor="start" x="1088.38" y="-963.25" font-family="monospace" font-size="11.00">OVS dpdk</text>
@@ -662,7 +662,7 @@
 <!-- net__eno5 -->
 <g id="node37" class="node">
 <title>net__eno5</title>
-<g id="a_node37"><a xlink:title="BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9050&#10;rx_bytes 113G&#10;rx_packets 210M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 10.7M&#10;tx_bytes 3568G&#10;tx_packets 685M&#10;tx_errors 0&#10;tx_dropped 0&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
+<g id="a_node37"><a xlink:title="BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9050&#10;rx_bytes 113G&#10;rx_packets 210M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 10.7M&#10;tx_bytes 3.6T&#10;tx_packets 685M&#10;tx_errors 0&#10;tx_dropped 0&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
 <polygon fill="none" stroke="hotpink" points="623.17,-1012.3 501.22,-1012.3 501.22,-961.1 623.17,-961.1 623.17,-1012.3"/>
 <text text-anchor="start" x="548.7" y="-999.25" font-family="monospace" font-weight="bold" font-size="11.00">eno5</text>
 <text text-anchor="start" x="528.45" y="-988.25" font-family="monospace" font-size="11.00">bond_slave</text>
@@ -692,7 +692,7 @@
 <!-- net__bond0 -->
 <g id="node39" class="node">
 <title>net__bond0</title>
-<g id="a_node39"><a xlink:title="BROADCAST,MULTICAST,MASTER,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9050&#10;rx_bytes 201G&#10;rx_packets 398M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 21.4M&#10;tx_bytes 5432G&#10;tx_packets 981M&#10;tx_errors 0&#10;tx_dropped 1&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
+<g id="a_node39"><a xlink:title="BROADCAST,MULTICAST,MASTER,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9050&#10;rx_bytes 201G&#10;rx_packets 398M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 21.4M&#10;tx_bytes 5.4T&#10;tx_packets 981M&#10;tx_errors 0&#10;tx_dropped 1&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
 <polygon fill="none" stroke="hotpink" points="391.2,-1467.3 269.25,-1467.3 269.25,-1416.1 391.2,-1416.1 391.2,-1467.3"/>
 <text text-anchor="start" x="313.35" y="-1454.25" font-family="monospace" font-weight="bold" font-size="11.00">bond0</text>
 <text text-anchor="start" x="289.72" y="-1443.25" font-family="monospace" font-size="11.00">bond 802.3ad</text>
@@ -712,7 +712,7 @@
 <!-- net__eno6 -->
 <g id="node40" class="node">
 <title>net__eno6</title>
-<g id="a_node40"><a xlink:title="BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9050&#10;rx_bytes 88.1G&#10;rx_packets 188M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 10.7M&#10;tx_bytes 1864G&#10;tx_packets 296M&#10;tx_errors 0&#10;tx_dropped 0&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
+<g id="a_node40"><a xlink:title="BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9050&#10;rx_bytes 88.1G&#10;rx_packets 188M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 10.7M&#10;tx_bytes 1.9T&#10;tx_packets 296M&#10;tx_errors 0&#10;tx_dropped 0&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
 <polygon fill="none" stroke="hotpink" points="623.17,-943.3 501.22,-943.3 501.22,-892.1 623.17,-892.1 623.17,-943.3"/>
 <text text-anchor="start" x="548.7" y="-930.25" font-family="monospace" font-weight="bold" font-size="11.00">eno6</text>
 <text text-anchor="start" x="528.45" y="-919.25" font-family="monospace" font-size="11.00">bond_slave</text>
@@ -805,7 +805,7 @@
 <!-- net__vlan3952 -->
 <g id="node45" class="node">
 <title>net__vlan3952</title>
-<g id="a_node45"><a xlink:title="BROADCAST,MULTICAST,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9000&#10;rx_bytes 159G&#10;rx_packets 224M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 42&#10;tx_bytes 5295G&#10;tx_packets 349M&#10;tx_errors 0&#10;tx_dropped 0&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
+<g id="a_node45"><a xlink:title="BROADCAST,MULTICAST,UP,LOWER_UP&#10;mac 94:40:c9:bb:38:94&#10;mtu 9000&#10;rx_bytes 159G&#10;rx_packets 224M&#10;rx_errors 0&#10;rx_dropped 0&#10;rx_fifo 0&#10;rx_frame 0&#10;rx_compressed 0&#10;rx_multicast 42&#10;tx_bytes 5.3T&#10;tx_packets 349M&#10;tx_errors 0&#10;tx_dropped 0&#10;tx_fifo 0&#10;tx_colls 0&#10;tx_carrier 0&#10;tx_compressed 0">
 <polygon fill="none" stroke="hotpink" points="179.47,-1615.3 57.52,-1615.3 57.52,-1564.1 179.47,-1564.1 179.47,-1615.3"/>
 <text text-anchor="start" x="91.5" y="-1602.25" font-family="monospace" font-weight="bold" font-size="11.00">vlan3952</text>
 <text text-anchor="start" x="88.12" y="-1591.25" font-family="monospace" font-size="11.00">vlan 3952</text>
@@ -873,8 +873,8 @@
 <!-- instance_00002826_memory_0 -->
 <g id="node49" class="node">
 <title>instance_00002826_memory_0</title>
-<polygon fill="none" stroke="red" points="159.22,-2328.7 77.78,-2328.7 77.78,-2292.7 159.22,-2292.7 159.22,-2328.7"/>
-<text text-anchor="start" x="81.38" y="-2312.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 160G</text>
+<polygon fill="none" stroke="red" points="162.6,-2328.7 74.4,-2328.7 74.4,-2292.7 162.6,-2292.7 162.6,-2328.7"/>
+<text text-anchor="start" x="78" y="-2312.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 160Gi</text>
 <text text-anchor="start" x="81.38" y="-2301.25" font-family="monospace" font-size="11.00" fill="red">host NUMA 0</text>
 </g>
 <!-- instance_00002826_cpu_1 -->
@@ -888,8 +888,8 @@
 <!-- instance_00002826_memory_1 -->
 <g id="node51" class="node">
 <title>instance_00002826_memory_1</title>
-<polygon fill="none" stroke="red" points="159.22,-2188.7 77.78,-2188.7 77.78,-2152.7 159.22,-2152.7 159.22,-2188.7"/>
-<text text-anchor="start" x="81.38" y="-2172.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 160G</text>
+<polygon fill="none" stroke="red" points="162.6,-2188.7 74.4,-2188.7 74.4,-2152.7 162.6,-2152.7 162.6,-2188.7"/>
+<text text-anchor="start" x="78" y="-2172.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 160Gi</text>
 <text text-anchor="start" x="81.38" y="-2161.25" font-family="monospace" font-size="11.00" fill="red">host NUMA 1</text>
 </g>
 <!-- net__ovs_netdev -->
@@ -937,9 +937,9 @@
 <!-- memory_1 -->
 <g id="node56" class="node">
 <title>memory_1</title>
-<polygon fill="none" stroke="red" points="1432.3,-491.7 1310.35,-491.7 1310.35,-455.7 1432.3,-455.7 1432.3,-491.7"/>
-<text text-anchor="start" x="1334.2" y="-475.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 189G</text>
-<text text-anchor="start" x="1313.95" y="-464.25" font-family="monospace" font-size="11.00">1G hugepages: 170</text>
+<polygon fill="none" stroke="red" points="1435.67,-491.7 1306.98,-491.7 1306.98,-455.7 1435.67,-455.7 1435.67,-491.7"/>
+<text text-anchor="start" x="1330.83" y="-475.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 189Gi</text>
+<text text-anchor="start" x="1310.58" y="-464.25" font-family="monospace" font-size="11.00">1Gi hugepages: 170</text>
 </g>
 <!-- phy_cpus_ovs_0 -->
 <g id="node57" class="node">
@@ -974,9 +974,9 @@
 <!-- memory_0 -->
 <g id="node60" class="node">
 <title>memory_0</title>
-<polygon fill="none" stroke="red" points="919.4,-111.7 797.45,-111.7 797.45,-75.7 919.4,-75.7 919.4,-111.7"/>
-<text text-anchor="start" x="821.3" y="-95.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 188G</text>
-<text text-anchor="start" x="801.05" y="-84.25" font-family="monospace" font-size="11.00">1G hugepages: 170</text>
+<polygon fill="none" stroke="red" points="922.77,-111.7 794.07,-111.7 794.07,-75.7 922.77,-75.7 922.77,-111.7"/>
+<text text-anchor="start" x="817.92" y="-95.25" font-family="monospace" font-weight="bold" font-size="11.00">memory 188Gi</text>
+<text text-anchor="start" x="797.67" y="-84.25" font-family="monospace" font-size="11.00">1Gi hugepages: 170</text>
 </g>
 </g>
 </svg>
