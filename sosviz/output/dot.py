@@ -176,7 +176,8 @@ class SOSGraph:
         for n in self.report.numa.values():
             if host_cpus & n.cpus:
                 cpu_numas.add(n.id)
-        labels.append(f'<font color="blue">host NUMA {bit_list(cpu_numas)}</font>')
+        if cpu_numas:
+            labels.append(f'<font color="blue">host NUMA {bit_list(cpu_numas)}</font>')
         self.node(self.vm_cpu_node_id(vm, numa), labels, color="blue")
 
         labels = [f"<b>memory {human_readable(numa.memory, 1024)}</b>"]
