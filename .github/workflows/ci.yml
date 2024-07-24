@@ -8,17 +8,18 @@ on: [push, pull_request]
 jobs:
   lint:
     runs-on: ubuntu-latest
+    env:
+      REVISION_RANGE: "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # force fetch all history
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip
-          restore-keys: pip
       - run: make lint
+      - run: make check-patches
+        if: ${{ github.event.pull_request.base.sha && github.event.pull_request.head.sha }}
 
   deploy:
     needs:
@@ -32,11 +33,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: 3.x
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip
-          restore-keys: pip
       - run: python -m pip install --upgrade build
       - run: python -m build
       - uses: pypa/gh-action-pypi-publish@release/v1
