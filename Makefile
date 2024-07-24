@@ -38,6 +38,12 @@ format: $(VENV)/.stamp
 	@echo "[black]"
 	@$(in_venv) $(PYTHON) -m black -q $(PY_FILES)
 
+REVISION_RANGE ?= origin/main..
+
+.PHONY: check-patches
+check-patches:
+	@./check-patches $(REVISION_RANGE)
+
 .PHONY: tag-release
 tag-release:
 	@cur_version=`sed -En 's/^version = "(.*)"$$/\1/p' pyproject.toml` && \
