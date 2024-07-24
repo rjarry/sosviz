@@ -39,7 +39,8 @@ def parse_report(path: pathlib.Path, data: D):
 
         elif name == "Processor Information":
             b = split_block(block)
-            if "Version" not in b:
+            props = {"Socket Designation", "Version", "Core Enabled", "Thread Count"}
+            if not props.issubset(b.keys()):
                 continue
             hw.processor.append(
                 D(
