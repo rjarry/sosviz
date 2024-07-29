@@ -9,7 +9,7 @@ from ..bits import parse_cpu_set
 
 
 def parse_report(path: pathlib.Path, data: D):
-    nodes = list(path.glob("sys/devices/system/node/node*"))
+    nodes = list(path.glob("sys/devices/system/node/node[0-9]*"))
     for node in nodes:
         match = re.match(r"^node(\d+)$", node.name)
         if not match:
@@ -38,25 +38,26 @@ def parse_report(path: pathlib.Path, data: D):
                 size = int(match.group(1)) * 1024
                 numa.setdefault("hugepages", D())[size] = int(huge.read_text())
 
-        for cpu in path.glob("sys/devices/system/cpu/cpu*/topology"):
+        offline_cpus = set()
+        for cpu in path.glob("sys/devices/system/cpu/cpu[0-9]*"):
+            if not (cpu / f"node{numa_id}").is_dir():
+                continue
+            cpu_id = int(re.match(r"cpu(\d+)", cpu.name).group(1))
+            online = cpu / "online"
+            if online.is_file() and online.read_text().strip() == "0":
+                offline_cpus.add(cpu_id)
+                continue
+            topo = cpu / "topology"
             try:
-                package_id = int((cpu / "physical_package_id").read_text())
-                if package_id != numa_id:
-                    continue
-            except FileNotFoundError:
-                cpu_id = int(re.match(r"cpu(\d+)", cpu.parent.name).group(1))
-                if cpu_id not in cpus:
-                    continue
-            try:
-                threads = parse_cpu_set((cpu / "thread_siblings_list").read_text())
+                threads = parse_cpu_set((topo / "thread_siblings_list").read_text())
             except FileNotFoundError:
                 try:
-                    threads = parse_cpu_set((cpu / "core_cpus_list").read_text())
+                    threads = parse_cpu_set((topo / "core_cpus_list").read_text())
                 except FileNotFoundError:
                     # hyperthreading disabled
                     continue
-            cpus.update(threads)
             for t in threads:
                 siblings[t] = threads - {t}
         numa.cpus = cpus
+        numa.offline_cpus = offline_cpus
         numa.thread_siblings = siblings

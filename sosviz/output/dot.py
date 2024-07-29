@@ -659,6 +659,16 @@ class SOSGraph:
                 tooltip=self.irq_counters_tooltip(housekeeping_cpus),
                 color="blue",
             )
+            if numa.offline_cpus:
+                self.node(
+                    f"phy_cpus_offline_{numa.id}",
+                    [
+                        '<font color="gray"><b>Offline</b></font>',
+                        f'<font color="gray">CPUs {bit_list(numa.offline_cpus)}</font>',
+                    ],
+                    tooltip=self.irq_counters_tooltip(numa.offline_cpus),
+                    color="gray",
+                )
 
         labels = [f"<b>memory {human_readable(numa.total_memory, 1024)}</b>"]
         for size, num in numa.get("hugepages", {}).items():
