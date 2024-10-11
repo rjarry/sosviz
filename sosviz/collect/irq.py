@@ -8,7 +8,8 @@ from . import D
 from ..bits import parse_cpu_set
 
 
-INTERRUPT_RE = re.compile(r"^\s*(\w+):\s+([\s\d]+)\s+([A-Za-z].+)$", re.MULTILINE)
+CPU_RE = re.compile(r"\bCPU(\d+)\b")
+INTERRUPT_RE = re.compile(r"^\s*(\w+):\s+([\s\d]+)\s+([A-Za-z].+)$")
 
 
 def parse_report(path: pathlib.Path, data: D):
@@ -18,16 +19,22 @@ def parse_report(path: pathlib.Path, data: D):
     if not f.is_file():
         return
 
-    cpu_ids = []
+    topo_cpu_ids = []
     for cpu in path.glob("sys/devices/system/cpu/cpu[0-9]*"):
-        cpu_ids.append(int(re.match(r"cpu(\d+)", cpu.name).group(1)))
-    counters_len = max(*cpu_ids) + 1
+        topo_cpu_ids.append(int(re.match(r"cpu(\d+)", cpu.name).group(1)))
 
-    for match in INTERRUPT_RE.finditer(f.read_text()):
+    interrupts = f.read_text().splitlines()
+    irq_cpu_ids = [int(c) for c in CPU_RE.findall(interrupts.pop(0))]
+    counters_len = max(*irq_cpu_ids, *topo_cpu_ids) + 1
+
+    for line in interrupts:
+        match = INTERRUPT_RE.match(line)
+        if match is None:
+            continue
         irq = match.group(1)
         counters = [0] * counters_len
         for i, c in enumerate(match.group(2).split()):
-            counters[cpu_ids[i]] = int(c)
+            counters[irq_cpu_ids[i]] = int(c)
         irqs[irq] = D(
             irq=irq,
             desc=re.sub(r"\s+", " ", match.group(3).strip()),
