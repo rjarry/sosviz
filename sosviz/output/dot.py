@@ -601,12 +601,15 @@ class SOSGraph:
         return format_label(tooltip)
 
     def phy_numa(self, numa: D):
-        model = "<b>Unknown Processor Model</b>"
         for i, proc in enumerate(self.report.hardware.processor):
             if i == numa.id:
                 model = f"<b>{proc.model}</b>"
+                break
+        else:
+            model = "<b>Unknown Processor Model</b>"
         with self.cluster(model, style="dotted", color="blue"):
-            housekeeping_cpus = set(numa.cpus)
+            housekeeping_cpus = set(numa.housekeeping_cpus)
+            isolated_cpus = set(numa.isolated_cpus)
 
             ovs_pmds = {}
             for pmd in self.report.ovs.pmds.values():
@@ -637,6 +640,7 @@ class SOSGraph:
                 )
 
             housekeeping_cpus -= ovs_pmds.keys()
+            isolated_cpus -= ovs_pmds.keys()
 
             for vm in self.report.get("vms", {}).values():
                 for vnuma in vm.numa.values():
@@ -652,6 +656,18 @@ class SOSGraph:
                         color="blue",
                     )
                     housekeeping_cpus -= host_cpus
+                    isolated_cpus -= host_cpus
+
+            if isolated_cpus:
+                self.node(
+                    f"phy_cpus_isolated_{numa.id}",
+                    [
+                        "<b><i>Isolated</i></b>",
+                        f"<i>CPUs {bit_list(isolated_cpus)}</i>",
+                    ],
+                    tooltip=self.irq_counters_tooltip(isolated_cpus),
+                    color="cornflowerblue",
+                )
 
             self.node(
                 f"phy_cpus_housekeeping_{numa.id}",

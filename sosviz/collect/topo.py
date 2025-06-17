@@ -59,5 +59,15 @@ def parse_report(path: pathlib.Path, data: D):
             for t in threads:
                 siblings[t] = threads - {t}
         numa.cpus = cpus
+        numa.housekeeping_cpus = cpus
+        numa.isolated_cpus = set()
         numa.offline_cpus = offline_cpus
         numa.thread_siblings = siblings
+
+    cmdline = (path / "proc/cmdline").read_text()
+    match = re.search(r"\bisolcpus=([\d,-]+)\b", cmdline)
+    if match:
+        isolated_cpus = parse_cpu_set(match.group(1))
+        for numa in data.numa.values():
+            numa.housekeeping_cpus = numa.cpus - isolated_cpus
+            numa.isolated_cpus = numa.cpus & isolated_cpus
