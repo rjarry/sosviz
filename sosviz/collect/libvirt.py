@@ -4,8 +4,8 @@
 import pathlib
 import xml.etree.ElementTree as ET
 
-from . import D
 from ..bits import parse_cpu_set
+from . import D
 
 
 def parse_report(path: pathlib.Path, data: D):

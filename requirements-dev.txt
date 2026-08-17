@@ -1,5 +1,4 @@
 graphviz
-black
-isort
+ruff
 pylint
 setuptools

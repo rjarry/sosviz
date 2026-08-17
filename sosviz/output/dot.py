@@ -18,7 +18,6 @@ def render(report: D, **opts):
 
 
 class SOSGraph:
-
     def __init__(self, report: D):
         self.dot = graphviz.Graph(
             name="sosviz",

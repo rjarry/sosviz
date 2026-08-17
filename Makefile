@@ -22,21 +22,21 @@ J ?= $(shell nproc)
 
 .PHONY: lint
 lint: $(VENV)/.stamp
-	@echo "[black]"
-	@$(in_venv) $(PYTHON) -m black -q --diff --check $(PY_FILES) || \
+	@echo "[ruff check]"
+	@$(in_venv) $(PYTHON) -m ruff check $(PY_FILES) || \
 		{ echo "Use 'make format' to fix the problems."; exit 1; }
-	@echo "[isort]"
-	@$(in_venv) $(PYTHON) -m isort -j$(J) --diff --check-only $(PY_FILES) || \
+	@echo "[ruff format]"
+	@$(in_venv) $(PYTHON) -m ruff format --diff --check $(PY_FILES) || \
 		{ echo "Use 'make format' to fix the problems."; exit 1; }
 	@echo "[pylint]"
 	@$(in_venv) $(PYTHON) -m pylint $(PY_FILES)
 
 .PHONY: format
 format: $(VENV)/.stamp
-	@echo "[isort]"
-	@$(in_venv) $(PYTHON) -m isort -j$(J) $(PY_FILES)
-	@echo "[black]"
-	@$(in_venv) $(PYTHON) -m black -q $(PY_FILES)
+	@echo "[ruff check --fix]"
+	@$(in_venv) $(PYTHON) -m ruff check --fix $(PY_FILES)
+	@echo "[ruff format]"
+	@$(in_venv) $(PYTHON) -m ruff format $(PY_FILES)
 
 REVISION_RANGE ?= origin/main..
 

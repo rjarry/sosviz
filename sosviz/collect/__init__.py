@@ -7,7 +7,6 @@ import pkgutil
 
 
 class D(dict):
-
     def __getattr__(self, attr):
         return self[attr]
 

@@ -4,8 +4,8 @@
 import pathlib
 import re
 
-from . import D
 from ..bits import parse_cpu_set
+from . import D
 
 
 CPU_RE = re.compile(r"\bCPU(\d+)\b")
